@@ -39,21 +39,16 @@ export default function Home() {
     <>
       <Navbar />
 
-      {/* Main Page Content */}
       <div className="pt-20 min-h-screen bg-[#fdf8f2] text-gray-800">
-        {/* HERO SECTION */}
         <section className="relative h-[70vh] w-full flex items-center justify-center px-6 overflow-hidden">
-          {/* Background Image */}
           <img
             src="/images/Homepage.png"
             alt="Food background"
             className="absolute inset-0 w-full h-full object-cover blur-sm opacity-80 z-0"
           />
 
-          {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black/50 z-0"></div>
 
-          {/* Content */}
           <div className="relative z-10 flex flex-col items-center text-center">
             <h1 className="text-7xl md:text-8xl lg:text-9xl font-extrabold text-white tracking-wide mb-6">
               {displayText}
@@ -84,7 +79,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* INFO SECTION */}
         <section className="py-16 text-center">
           <h2 className="text-3xl font-semibold mb-4">
             Your All-in-One Living Solution
@@ -92,6 +86,22 @@ export default function Home() {
           <p className="text-orange-500 mb-8 max-w-2xl mx-auto">
             Comfortable stays and healthy home-cooked meals, all under one roof.
           </p>
+          {/* MINI STATS BOXES */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+            {/* PG Students */}
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg text-center border border-orange-200">
+              <h3 className="text-3xl font-bold text-orange-500">4+</h3>
+              <p className="text-gray-700 font-medium">Total PG Students</p>
+            </div>
+
+            {/* Tiffin Customers */}
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-lg text-center border border-orange-200">
+              <h3 className="text-3xl font-bold text-orange-500">10+</h3>
+              <p className="text-gray-700 font-medium">
+                Total Tiffin Customers
+              </p>
+            </div>
+          </div>
         </section>
 
         <section className="bg-white py-16">
@@ -100,7 +110,6 @@ export default function Home() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto px-6">
-            {/* REUSABLE CARD STYLE */}
             {[
               {
                 id: 1,
@@ -151,7 +160,6 @@ export default function Home() {
           }
         `}
               >
-                {/* ICON BOX */}
                 <div
                   className={`
             w-24 h-20 mx-auto mb-6 rounded-xl flex items-center justify-center transition

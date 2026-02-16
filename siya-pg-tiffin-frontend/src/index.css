@@ -2,8 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ====== SWADBOX THEME ====== */
+
 body {
-  background-color: #020617;
-  color: white;
+  background-color: #fdf6ec;
+  font-family: 'Segoe UI', sans-serif;
 }
+
+.auth-card {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.auth-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249,115,22,0.2);
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 12px;
+  background: #f97316;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-btn:hover {
+  background: #ea580c;
+}
+
 
