@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../utils/api";
 
@@ -14,6 +14,20 @@ export default function SignUp() {
   });
 
   const [errors, setErrors] = useState({});
+  const [adminExists, setAdminExists] = useState(false);
+
+  /* ================= CHECK ADMIN EXISTS ================= */
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await API.get("/auth/check-admin");
+        setAdminExists(res.data.adminExists);
+      } catch (err) {
+        console.error("Admin check failed");
+      }
+    };
+    checkAdmin();
+  }, []);
 
   /* ================= INPUT CHANGE ================= */
   const handleChange = (e) => {
@@ -112,6 +126,10 @@ export default function SignUp() {
               }`}
             >
               <option value="">Select Role</option>
+
+              {/* SHOW ADMIN ONLY IF NOT EXISTS */}
+              {!adminExists && <option value="admin">Admin</option>}
+
               <option value="customer">Customer (Tiffin)</option>
               <option value="student">Student (PG Room)</option>
             </select>
@@ -157,7 +175,6 @@ export default function SignUp() {
             )}
           </div>
 
-          {/* BUTTON */}
           <button className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition">
             Sign Up
           </button>

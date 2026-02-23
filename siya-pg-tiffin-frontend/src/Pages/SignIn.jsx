@@ -27,21 +27,52 @@ const SignIn = () => {
     setLoading(true);
     setError("");
 
+    // Validation
+    if (!formData.email || !formData.password) {
+      setError("Please enter both email and password");
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log("🔐 Attempting login with:", formData.email);
+      
       const response = await API.post("/auth/login", {
         email: formData.email,
         password: formData.password,
         rememberMe: formData.rememberMe,
       });
 
+      console.log("✅ Login successful! Response:", response.data);
+
       // Store token and user data
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // Redirect to home page
-      navigate("/");
+      // ⭐ ROLE-BASED REDIRECT
+      const role = response.data.role || response.data.user?.role;
+      console.log("📍 User role:", role, "Redirecting...");
+
+      if (role === "admin") {
+        navigate("/admin");
+      } else if (role === "student") {
+        navigate("/student");
+      } else if (role === "customer") {
+        navigate("/customer");
+      } else {
+        console.warn("⚠️ Unknown role:", role);
+        navigate("/");
+      }
+
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      const errorMsg = err.response?.data?.message || "Login failed. Please try again.";
+      console.error("❌ Login error:", errorMsg);
+      setError(errorMsg);
+      
+      // Provide helpful hints
+      if (errorMsg.includes("Invalid credentials")) {
+        console.log("💡 Hint: Check that email and password are correct and user is registered.");
+      }
     } finally {
       setLoading(false);
     }

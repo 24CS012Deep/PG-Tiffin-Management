@@ -2,40 +2,24 @@ import nodemailer from "nodemailer";
 
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    
-    if (process.env.NODE_ENV === "development") {
-      console.log("=".repeat(50));
-      console.log("📧 EMAIL SENT (Development Mode)");
-      console.log("To:", to);
-      console.log("Subject:", subject);
-      console.log("Content:", html);
-      console.log("=".repeat(50));
-      return;
-    }
-
-    
-  const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: false, // use TLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
     await transporter.sendMail({
-      from: '"SwadBox" <noreply@swadbox.com>',
+      from: `"SwadBox" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
     });
 
-    console.log(`Email sent to ${to}`);
+    console.log("📧 Email sent successfully to:", to);
   } catch (error) {
-    console.error("Email sending failed:", error);
-    throw new Error("Email could not be sent");
+    console.error("❌ Email sending failed:", error.message);
   }
 };
 

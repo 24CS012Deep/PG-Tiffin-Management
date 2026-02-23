@@ -40,7 +40,7 @@ export default function Home() {
       <Navbar />
 
       <div className="pt-20 min-h-screen bg-[#fdf8f2] text-gray-800">
-        <section className="relative h-[70vh] w-full flex items-center justify-center px-6 overflow-hidden">
+        <section className="relative h-[80vh] flex items-center justify-center px-6 overflow-hidden">
           <img
             src="/images/Homepage.png"
             alt="Food background"
