@@ -5,13 +5,15 @@ import { FaBars, FaTimes } from "react-icons/fa";
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  // Removed dynamic user state for login/logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
-  const navLink =
-    "group relative text-gray-700 hover:text-orange-500 transition";
-
-  // Removed logout function
+  const navLink = "group relative text-gray-700 hover:text-orange-500 transition";
 
   return (
     <>
@@ -27,67 +29,65 @@ export default function Navbar() {
               <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
-            <Link to="/about" className={navLink}>
-              About Us
+            {/* CONTACT US */}
+            <Link to="/contact" className={navLink}>
+              Contact Us
               <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
-            <a href="#services" className={navLink}>
-              Services
-              <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
-            </a>
-
-            {/* Always show Sign Up, no dynamic login/logout */}
-            <Link to="/signup" className={navLink}>
-              Sign Up
-              <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
+            {user ? (
+              <>
+                {/* DASHBOARD (when logged in) */}
+                <Link to={`/${user.role}`} className={navLink}>
+                  Dashboard
+                  <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                {/* SIGN UP */}
+                <Link to="/signup" className={navLink}>
+                  Sign Up
+                  <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+              </>
+            )}
           </div>
 
-          <button
-            onClick={() => setOpen(true)}
-            className="md:hidden text-2xl text-gray-700"
-          >
+          <button onClick={() => setOpen(true)} className="md:hidden text-2xl text-gray-700">
             <FaBars />
           </button>
         </div>
       </nav>
 
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      {/* Mobile Menu Overlay */}
+      {open && <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setOpen(false)} />}
 
-      <aside
-        className={`fixed top-0 right-0 h-full w-64 bg-white z-50 shadow-lg transform transition-transform duration-300 ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
+      {/* Mobile Menu Sidebar */}
+      <aside className={`fixed top-0 right-0 h-full w-64 bg-white z-50 shadow-lg transform transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}>
         <div className="p-6 flex flex-col h-full">
-          <button
-            onClick={() => setOpen(false)}
-            className="self-end text-2xl mb-6"
-          >
+          <button onClick={() => setOpen(false)} className="self-end text-2xl mb-6">
             <FaTimes />
           </button>
 
           <nav className="flex flex-col gap-6 text-lg font-medium text-gray-700">
-            <Link to="/" onClick={() => setOpen(false)}>
-              Home
-            </Link>
-            <Link to="/about" onClick={() => setOpen(false)}>
-              About Us
-            </Link>
-            <a href="#services" onClick={() => setOpen(false)}>
-              Services
-            </a>
-
-            {/* Always show Sign Up in mobile menu */}
-            <Link to="/signup" onClick={() => setOpen(false)}>
-              Sign Up
-            </Link>
+            <Link to="/" onClick={() => setOpen(false)}>Home</Link>
+            <Link to="/contact" onClick={() => setOpen(false)}>Contact Us</Link>
+            
+            {user ? (
+              <>
+                <Link to={`/${user.role}`} onClick={() => setOpen(false)}>Dashboard</Link>
+                <button onClick={handleLogout} className="text-left text-red-500">Logout</button>
+              </>
+            ) : (
+              <Link to="/signup" onClick={() => setOpen(false)}>Sign Up</Link>
+            )}
           </nav>
 
           <div className="mt-auto text-sm text-gray-400">© 2026 SwadBox</div>

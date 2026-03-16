@@ -17,10 +17,10 @@ const ForgotPassword = () => {
 
     try {
       const response = await API.post("/auth/forgot-password", { email });
-      setSuccess(response.data.message);
+      setSuccess(response.data.message || "Reset link sent to your email");
       setEmail("");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send reset link. Please try again.");
+      setError(err.response?.data?.message || "Failed to send reset link");
     } finally {
       setLoading(false);
     }
@@ -40,15 +40,13 @@ const ForgotPassword = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-xl rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded" role="alert">
-              <p className="font-medium">Error</p>
+            <div className="mb-4 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded">
               <p>{error}</p>
             </div>
           )}
 
           {success && (
-            <div className="mb-4 bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
-              <p className="font-medium">Success</p>
+            <div className="mb-4 bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded">
               <p>{success}</p>
             </div>
           )}
@@ -64,9 +62,7 @@ const ForgotPassword = () => {
                 </div>
                 <input
                   id="email"
-                  name="email"
                   type="email"
-                  autoComplete="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -80,16 +76,9 @@ const ForgotPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
               >
-                {loading ? (
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  "Send Reset Link"
-                )}
+                {loading ? "Sending..." : "Send Reset Link"}
               </button>
             </div>
           </form>
