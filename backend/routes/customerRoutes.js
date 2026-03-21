@@ -1,6 +1,11 @@
 import express from "express";
 import { protect, customerOnly } from "../middleware/authMiddleware.js";
-import { getCustomerProfile, updateCustomerProfile } from "../controllers/customerController.js";
+import {
+  getCustomerProfile,
+  updateCustomerProfile,
+  getCustomerDashboard,
+  verifyCustomerPassword,
+} from "../controllers/customerController.js";
 import { 
   createOrder, 
   getUserOrders, 
@@ -14,8 +19,10 @@ const router = express.Router();
 
 router.use(protect, customerOnly);
 
+router.get("/dashboard", getCustomerDashboard);
 router.get("/profile", getCustomerProfile);
 router.put("/profile", updateCustomerProfile);
+router.post("/profile/verify-password", verifyCustomerPassword);
 router.get("/tiffin-plans", getTiffinPlans);
 router.get("/orders", getUserOrders);           // ✅ Now works
 router.post("/orders", createOrder);             // ✅ Now works

@@ -1,10 +1,29 @@
+import { useNavigate } from "react-router-dom";
+
 const Topbar = () => {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
   const getInitials = () => {
     if (!user?.name) return "AD";
     const names = user.name.split(" ");
     return names.length > 1 ? names[0][0] + names[1][0] : names[0][0];
+  };
+
+  const handleProfileRedirect = () => {
+    if (user?.role === "customer") {
+      navigate("/customer/profile");
+      return;
+    }
+    if (user?.role === "student") {
+      navigate("/student/profile");
+      return;
+    }
+    if (user?.role === "admin") {
+      navigate("/admin/settings");
+      return;
+    }
+    navigate("/");
   };
 
   return (
@@ -17,9 +36,14 @@ const Topbar = () => {
           placeholder="Search anything..."
         />
 
-        <div className="bg-orange-100 text-orange-500 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base">
+        <button
+          type="button"
+          onClick={handleProfileRedirect}
+          title="Go to profile"
+          className="bg-orange-100 text-orange-500 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base hover:bg-orange-200 transition cursor-pointer"
+        >
           {getInitials()}
-        </div>
+        </button>
       </div>
     </div>
   );

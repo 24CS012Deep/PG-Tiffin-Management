@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { FiShoppingBag, FiDollarSign, FiMessageSquare, FiBox } from "react-icons/fi";
+import { FiShoppingBag, FiDollarSign, FiMessageSquare, FiBox, FiUser } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 const CustomerDashboard = () => {

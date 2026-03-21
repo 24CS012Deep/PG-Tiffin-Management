@@ -1,6 +1,7 @@
 import Order from "../models/Order.js";
 import TiffinPlan from "../models/TiffinPlan.js";
 import User from "../models/User.js";
+import Billing from "../models/Billing.js";
 import sendEmail from "../utils/sendEmail.js";
 
 /* ================= CREATE ORDER (CUSTOMER) ================= */
@@ -51,6 +52,32 @@ export const createOrder = async (req, res) => {
     // Update plan customer count
     plan.currentCustomers = (plan.currentCustomers || 0) + 1;
     await plan.save();
+
+    // Reflect order amount in customer's monthly tiffin bill
+    const billMonth = new Date(order.date).toLocaleString("en-IN", {
+      month: "long",
+      year: "numeric",
+    });
+    const existingBill = await Billing.findOne({
+      user: req.user.id,
+      month: billMonth,
+      type: "tiffin",
+    });
+
+    if (existingBill) {
+      existingBill.amount = (existingBill.amount || 0) + totalAmount;
+      existingBill.status = existingBill.status === "paid" ? "paid" : "pending";
+      await existingBill.save();
+    } else {
+      await Billing.create({
+        user: req.user.id,
+        month: billMonth,
+        amount: totalAmount,
+        type: "tiffin",
+        status: "pending",
+        details: `Tiffin orders for ${billMonth}`,
+      });
+    }
 
     // Send confirmation email
     try {
@@ -160,6 +187,17 @@ export const cancelOrder = async (req, res) => {
       return res.status(400).json({ message: "Cannot cancel completed order" });
     }
 
+    const FIVE_MINUTES_MS = 5 * 60 * 1000;
+    const orderCreatedAt = new Date(order.createdAt).getTime();
+    const now = Date.now();
+    const elapsedMs = now - orderCreatedAt;
+
+    if (elapsedMs > FIVE_MINUTES_MS) {
+      return res.status(400).json({
+        message: "Order can only be cancelled within 5 minutes of placing it"
+      });
+    }
+
     // Update order status
     order.status = "cancelled";
     await order.save();
@@ -169,6 +207,27 @@ export const cancelOrder = async (req, res) => {
     if (plan) {
       plan.currentCustomers = Math.max(0, (plan.currentCustomers || 1) - 1);
       await plan.save();
+    }
+
+    // Reduce customer's monthly tiffin bill when order is cancelled
+    const billMonth = new Date(order.date).toLocaleString("en-IN", {
+      month: "long",
+      year: "numeric",
+    });
+    const existingBill = await Billing.findOne({
+      user: req.user.id,
+      month: billMonth,
+      type: "tiffin",
+    });
+
+    if (existingBill) {
+      const updatedAmount = (existingBill.amount || 0) - (order.totalAmount || 0);
+      if (updatedAmount <= 0 && existingBill.status !== "paid") {
+        await Billing.findByIdAndDelete(existingBill._id);
+      } else {
+        existingBill.amount = Math.max(0, updatedAmount);
+        await existingBill.save();
+      }
     }
 
     // Send cancellation email

@@ -32,13 +32,13 @@ import MessMenu from "./Pages/student/MessMenu";
 import RaiseQuery from "./Pages/student/RaiseQuery";
 import Profile from "./Pages/student/Profile";
 
-// Customer Pages (create basic placeholders if needed)
-const CustomerDashboard = () => <div>Customer Dashboard</div>;
-const CustomerMyOrders = () => <div>My Orders</div>;
-const CustomerMyBills = () => <div>My Bills</div>;
-const CustomerTiffinPlans = () => <div>Tiffin Plans</div>;
-const CustomerRaiseQuery = () => <div>Raise Query</div>;
-const CustomerProfile = () => <div>Profile</div>;
+// Customer Pages
+import CustomerDashboard from "./Pages/customer/CustomerDashboard";
+import CustomerMyOrders from "./Pages/customer/MyOrders";
+import CustomerMyBills from "./Pages/customer/MyBills";
+import CustomerTiffinPlans from "./Pages/customer/TiffinPlans";
+import CustomerRaiseQuery from "./Pages/customer/RaiseQuery";
+import CustomerProfile from "./Pages/customer/Profile";
 
 function App() {
   return (

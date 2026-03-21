@@ -1,5 +1,9 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import Order from "../models/Order.js";
+import Billing from "../models/Billing.js";
+import Query from "../models/Query.js";
+import TiffinPlan from "../models/TiffinPlan.js";
 
 // @desc    Get current customer profile
 // @route   GET /api/customer/profile
@@ -67,15 +71,69 @@ export const updateCustomerProfile = async (req, res) => {
   }
 };
 
+// @desc    Verify customer's current password before password change
+// @route   POST /api/customer/profile/verify-password
+// @access  Private (Customer only)
+export const verifyCustomerPassword = async (req, res) => {
+  try {
+    const { currentPassword } = req.body;
+
+    if (!currentPassword) {
+      return res.status(400).json({ message: "Current password is required" });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    return res.json({ success: true, message: "Password verified" });
+  } catch (error) {
+    console.error("Verify password error:", error);
+    res.status(500).json({ message: "Failed to verify password" });
+  }
+};
+
 // @desc    Get customer dashboard data
 // @route   GET /api/customer/dashboard
 // @access  Private (Customer only)
 export const getCustomerDashboard = async (req, res) => {
   try {
-    // This is a placeholder - actual data will come from other controllers
-    res.json({ 
-      message: "Customer Dashboard",
-      user: req.user 
+    const customerId = req.user.id;
+
+    const [orders, bills, queries, availablePlans] = await Promise.all([
+      Order.find({ customer: customerId })
+        .populate("tiffinPlan", "name")
+        .sort("-createdAt"),
+      Billing.find({ user: customerId }).sort("-generatedAt"),
+      Query.find({ user: customerId }).sort("-createdAt"),
+      TiffinPlan.countDocuments({ isActive: true }),
+    ]);
+
+    const totalOrders = orders.length;
+    const activeOrders = orders.filter((o) => o.status === "live").length;
+    const totalBills = bills.length;
+    const pendingBills = bills.filter((b) => b.status === "pending").length;
+    const totalQueries = queries.length;
+    const openQueries = queries.filter((q) => q.status === "open").length;
+
+    res.json({
+      success: true,
+      stats: {
+        totalOrders,
+        activeOrders,
+        totalBills,
+        pendingBills,
+        totalQueries,
+        openQueries,
+        availablePlans,
+      },
+      recentOrders: orders.slice(0, 3),
     });
   } catch (error) {
     console.error("Dashboard error:", error);
