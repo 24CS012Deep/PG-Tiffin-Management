@@ -92,27 +92,27 @@ export default function PGGallery() {
     <>
       <Navbar />
       
-      <div className="min-h-screen bg-[#fdf8f2] pt-20">
-        <div className="bg-orange-500 text-white py-12">
-          <div className="max-w-7xl mx-auto px-6">
-            <Link to="/" className="inline-flex items-center text-white mb-4 hover:text-orange-200 transition">
-              <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+      <div className="min-h-screen bg-[#fdf8f2] pt-16 md:pt-20">
+        <div className="bg-orange-500 text-white py-6 md:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <Link to="/" className="inline-flex items-center text-white mb-2 sm:mb-4 hover:text-orange-200 transition text-sm sm:text-base">
+              <FontAwesomeIcon icon={faArrowLeft} className="mr-2 text-xs sm:text-base" />
               Back to Home
             </Link>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Siya PG Gallery</h1>
-            <p className="text-xl text-orange-100">Take a virtual tour of our premium PG accommodation</p>
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-4">Siya PG Gallery</h1>
+            <p className="text-sm sm:text-base md:text-xl text-orange-100">Take a virtual tour of our premium PG accommodation</p>
           </div>
         </div>
 
         
-        <section className="py-12 px-6 bg-white">
+        <section className="py-8 md:py-12 px-4 sm:px-6 bg-white">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-semibold text-center mb-8">Our Premium Amenities</h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-center mb-6 md:mb-8">Our Premium Amenities</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
               {amenities.map((amenity, index) => (
-                <div key={index} className="text-center p-4 rounded-lg hover:bg-orange-50 transition">
-                  <FontAwesomeIcon icon={amenity.icon} className="text-3xl text-orange-500 mb-2" />
-                  <p className="text-gray-700 font-medium">{amenity.name}</p>
+                <div key={index} className="text-center p-2 sm:p-4 rounded-lg hover:bg-orange-50 transition">
+                  <FontAwesomeIcon icon={amenity.icon} className="text-xl sm:text-2xl md:text-3xl text-orange-500 mb-1 sm:mb-2" />
+                  <p className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">{amenity.name}</p>
                 </div>
               ))}
             </div>
@@ -120,14 +120,14 @@ export default function PGGallery() {
         </section>
 
        
-        <section className="py-12 px-6">
+        <section className="py-8 md:py-12 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-wrap gap-4 justify-center mb-10">
+            <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 justify-center mb-8 md:mb-10">
               {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-medium transition-all duration-300 text-xs sm:text-sm ${
                     selectedCategory === category.id
                       ? "bg-orange-500 text-white"
                       : "bg-orange-100 text-orange-600 hover:bg-orange-200"
@@ -139,7 +139,7 @@ export default function PGGallery() {
             </div>
 
           
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               {filteredPhotos.length > 0 ? (
                 filteredPhotos.map((photo) => (
                   <div
@@ -151,7 +151,7 @@ export default function PGGallery() {
                       <img
                         src={getImageSrc(photo.url)}
                         alt={photo.title}
-                        className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-48 sm:h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = "/images/Homepage.png"; 
@@ -159,34 +159,34 @@ export default function PGGallery() {
                       />
                     </div>
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <FontAwesomeIcon icon={faExpand} className="text-white text-3xl" />
+                      <FontAwesomeIcon icon={faExpand} className="text-white text-2xl sm:text-3xl" />
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                      <h3 className="text-white font-semibold">{photo.title}</h3>
-                      <p className="text-white text-sm opacity-90">{photo.description}</p>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-4">
+                      <h3 className="text-white font-semibold text-xs sm:text-sm md:text-base">{photo.title}</h3>
+                      <p className="text-white text-xs opacity-90">{photo.description}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-gray-500">No photos found in this category</p>
+                <div className="col-span-full text-center py-8 md:py-12">
+                  <p className="text-gray-500 text-sm">No photos found in this category</p>
                 </div>
               )}
             </div>
 
             {/* Contact Section */}
-            <div className="mt-16 bg-orange-50 rounded-2xl p-8 text-center">
-              <h2 className="text-2xl font-semibold mb-4">Interested in booking a room?</h2>
-              <p className="text-gray-600 mb-6">Visit us for a physical tour or contact us for more details</p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <button className="bg-orange-500 text-white px-8 py-3 rounded-lg hover:bg-orange-600 transition font-medium">
+            <div className="mt-8 md:mt-16 bg-orange-50 rounded-2xl p-4 sm:p-6 md:p-8 text-center">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">Interested in booking a room?</h2>
+              <p className="text-gray-600 mb-4 md:mb-6 text-xs sm:text-sm md:text-base">Visit us for a physical tour or contact us for more details</p>
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 md:gap-4 justify-center">
+                <button className="bg-orange-500 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-orange-600 transition font-medium text-xs sm:text-sm md:text-base">
                   Contact for Booking
                 </button>
-                <button className="bg-white border-2 border-orange-500 text-orange-600 px-8 py-3 rounded-lg hover:bg-orange-50 transition font-medium">
+                <button className="bg-white border-2 border-orange-500 text-orange-600 px-4 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-orange-50 transition font-medium text-xs sm:text-sm md:text-base">
                   Schedule a Visit
                 </button>
               </div>
-              <p className="mt-4 text-gray-600">
+              <p className="mt-3 md:mt-4 text-gray-600 text-xs sm:text-sm">
                 Call us: +91 99043 72800 | Street Name - Changa, City - Anand, 388421
               </p>
             </div>
@@ -196,18 +196,18 @@ export default function PGGallery() {
         
         {selectedImage && (
           <div 
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 overflow-y-auto"
             onClick={() => setSelectedImage(null)}
           >
             <button 
               onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 text-white hover:text-orange-500 transition z-50"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-orange-500 transition z-50"
             >
-              <FontAwesomeIcon icon={faTimes} className="text-3xl" />
+              <FontAwesomeIcon icon={faTimes} className="text-2xl sm:text-3xl" />
             </button>
-            <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="max-w-2xl sm:max-w-4xl w-full my-8" onClick={(e) => e.stopPropagation()}>
               <div className="bg-white rounded-xl overflow-hidden">
-                <div className="relative h-96 bg-gray-900">
+                <div className="relative h-48 sm:h-64 md:h-96 bg-gray-900">
                   <img
                     src={getImageSrc(selectedImage.url)}
                     alt={selectedImage.title}
@@ -218,12 +218,12 @@ export default function PGGallery() {
                     }}
                   />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-2xl font-semibold mb-2">{selectedImage.title}</h3>
-                  <p className="text-gray-600 mb-4">{selectedImage.description}</p>
+                <div className="p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-2xl font-semibold mb-2">{selectedImage.title}</h3>
+                  <p className="text-gray-600 mb-3 sm:mb-4 text-xs sm:text-sm">{selectedImage.description}</p>
                   <button 
                     onClick={() => setSelectedImage(null)}
-                    className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition"
+                    className="bg-orange-500 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-orange-600 transition text-sm sm:text-base"
                   >
                     Close
                   </button>

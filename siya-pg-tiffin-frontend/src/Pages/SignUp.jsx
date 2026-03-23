@@ -78,22 +78,22 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fdf4e8]">
-      <div className="bg-white p-10 rounded-2xl shadow-xl w-[420px]">
-        <h2 className="text-3xl font-bold text-center text-orange-600 mb-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#fdf4e8] px-4 py-8">
+      <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center text-orange-600 mb-6 sm:mb-8">
           Create Account
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
             <input
               name="name"
               placeholder="Full Name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className={`w-full p-3 border rounded-lg ${errors.name ? "border-red-500" : ""}`}
+              className={`w-full p-2 sm:p-3 border rounded-lg text-sm ${errors.name ? "border-red-500" : ""}`}
             />
-            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.name}</p>}
           </div>
 
           <div>
@@ -103,9 +103,9 @@ export default function SignUp() {
               placeholder="Email Address"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={`w-full p-3 border rounded-lg ${errors.email ? "border-red-500" : ""}`}
+              className={`w-full p-2 sm:p-3 border rounded-lg text-sm ${errors.email ? "border-red-500" : ""}`}
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.email && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.email}</p>}
           </div>
 
           <div>
@@ -113,14 +113,14 @@ export default function SignUp() {
               name="role"
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
-              className={`w-full p-3 border rounded-lg ${errors.role ? "border-red-500" : ""}`}
+              className={`w-full p-2 sm:p-3 border rounded-lg text-sm ${errors.role ? "border-red-500" : ""}`}
             >
               <option value="">Select Role</option>
               {!adminExists && <option value="admin">Admin</option>}
               <option value="customer">Customer (Tiffin)</option>
               <option value="student">Student (PG Room)</option>
             </select>
-            {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
+            {errors.role && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.role}</p>}
           </div>
 
           <div>
@@ -130,9 +130,9 @@ export default function SignUp() {
               placeholder="Password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className={`w-full p-3 border rounded-lg ${errors.password ? "border-red-500" : ""}`}
+              className={`w-full p-2 sm:p-3 border rounded-lg text-sm ${errors.password ? "border-red-500" : ""}`}
             />
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            {errors.password && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.password}</p>}
           </div>
 
           <div>
@@ -142,17 +142,17 @@ export default function SignUp() {
               placeholder="Confirm Password"
               value={form.confirmPassword}
               onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-              className={`w-full p-3 border rounded-lg ${errors.confirmPassword ? "border-red-500" : ""}`}
+              className={`w-full p-2 sm:p-3 border rounded-lg text-sm ${errors.confirmPassword ? "border-red-500" : ""}`}
             />
-            {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+            {errors.confirmPassword && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.confirmPassword}</p>}
           </div>
 
-          <button className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition">
+          <button className="w-full bg-orange-600 text-white py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition font-medium text-sm sm:text-base">
             Sign Up
           </button>
         </form>
 
-        <p className="text-center mt-5">
+        <p className="text-center mt-4 sm:mt-5 text-xs sm:text-sm">
           Already have account?{" "}
           <Link to="/signin" className="text-orange-600 font-semibold">
             Sign In

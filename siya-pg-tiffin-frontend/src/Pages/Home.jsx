@@ -40,9 +40,9 @@ export default function Home() {
     <>
       <Navbar />
 
-      <div className="min-h-screen bg-[#fdf8f2] text-gray-800">
+      <div className="min-h-screen bg-[#fdf8f2] text-gray-800 pt-16">
         {/* Hero Section */}
-        <section className="relative h-screen flex items-center justify-center px-6 overflow-hidden">
+        <section className="relative h-80 sm:h-96 md:h-screen flex items-center justify-center px-4 sm:px-6 overflow-hidden">
           <img
             src="/images/Homepage.png"
             alt="Food background"
@@ -51,33 +51,33 @@ export default function Home() {
 
           <div className="absolute inset-0 bg-black/50"></div>
 
-          <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto">
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold text-white tracking-wide mb-6">
+          <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto px-4">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold text-white tracking-wide mb-3 sm:mb-6">
               {displayText}
               <span className="animate-pulse text-orange-400">|</span>
             </h1>
 
-            <div className="grid gap-3 mb-8">
-              <p className="text-xl md:text-2xl text-orange-200 font-medium">
+            <div className="grid gap-2 sm:gap-3 mb-6 sm:mb-8">
+              <p className="text-lg sm:text-xl md:text-2xl text-orange-200 font-medium">
                 Welcome to{" "}
                 <span className="text-white font-semibold">
                   Siya PG & Tiffin Service
                 </span>
               </p>
 
-              <p className="text-base md:text-lg text-orange-200">
+              <p className="text-sm sm:text-base md:text-lg text-orange-200">
                 Healthy PG Food & Smart PG Management
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center">
               <Link to="/pg-gallery">
-                <button className="bg-white/90 border-2 border-orange-300 text-orange-600 px-8 py-3 rounded-lg hover:bg-orange-100 transition-all duration-300 font-medium">
+                <button className="w-full sm:w-auto bg-white/90 border-2 border-orange-300 text-orange-600 px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-orange-100 transition-all duration-300 font-medium text-sm sm:text-base">
                   Visit Our PG
                 </button>
               </Link>
               <Link to="/signup">
-                <button className="bg-white/90 border-2 border-orange-300 text-orange-600 px-8 py-3 rounded-lg hover:bg-orange-100 transition-all duration-300 font-medium">
+                <button className="w-full sm:w-auto bg-white/90 border-2 border-orange-300 text-orange-600 px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:bg-orange-100 transition-all duration-300 font-medium text-sm sm:text-base">
                   View Today's Menu
                 </button>
               </Link>
@@ -86,40 +86,40 @@ export default function Home() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-20 px-6 bg-[#fdf8f2]">
+        <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-[#fdf8f2]">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-semibold text-center mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center mb-2 sm:mb-4">
               Your All-in-One Living Solution
             </h2>
-            <p className="text-orange-500 text-center mb-12 max-w-2xl mx-auto text-lg">
+            <p className="text-orange-500 text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-lg">
               Comfortable stays and healthy home-cooked meals, all under one roof.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-              <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-orange-200 hover:shadow-xl transition-shadow">
-                <h3 className="text-4xl font-bold text-orange-500 mb-2">4+</h3>
-                <p className="text-gray-700 font-medium text-lg">Total PG Students</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg text-center border border-orange-200 hover:shadow-xl transition-shadow">
+                <h3 className="text-3xl sm:text-4xl font-bold text-orange-500 mb-2">4+</h3>
+                <p className="text-gray-700 font-medium text-sm sm:text-lg">Total PG Students</p>
               </div>
 
-              <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-orange-200 hover:shadow-xl transition-shadow">
-                <h3 className="text-4xl font-bold text-orange-500 mb-2">10+</h3>
-                <p className="text-gray-700 font-medium text-lg">Total Tiffin Customers</p>
+              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg text-center border border-orange-200 hover:shadow-xl transition-shadow">
+                <h3 className="text-3xl sm:text-4xl font-bold text-orange-500 mb-2">10+</h3>
+                <p className="text-gray-700 font-medium text-sm sm:text-lg">Total Tiffin Customers</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Services Section */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-semibold text-center mb-4 text-orange-500">
+        <section className="py-12 sm:py-16 md:py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-center mb-2 sm:mb-4 text-orange-500">
               View Our Services
             </h2>
-            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            <p className="text-gray-600 text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base">
               Explore our comprehensive range of services designed for your comfort
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {[
                 {
                   id: 1,
@@ -162,7 +162,7 @@ export default function Home() {
                   key={service.id}
                   onClick={() => setActiveService(service.id)}
                   className={`
-                    p-8 rounded-2xl text-center border-2 transition-all duration-300 cursor-pointer
+                    p-5 sm:p-8 rounded-2xl text-center border-2 transition-all duration-300 cursor-pointer
                     ${
                       activeService === service.id
                         ? "bg-orange-500 border-orange-600 text-white scale-105 shadow-xl"
@@ -172,20 +172,20 @@ export default function Home() {
                 >
                   <div
                     className={`
-                      w-20 h-20 mx-auto mb-4 rounded-xl flex items-center justify-center transition
+                      w-16 sm:w-20 h-16 sm:h-20 mx-auto mb-3 sm:mb-4 rounded-xl flex items-center justify-center transition
                       ${activeService === service.id ? "bg-orange-600" : "bg-orange-100"}
                     `}
                   >
                     <FontAwesomeIcon 
                       icon={service.icon} 
-                      className={`text-3xl ${
+                      className={`text-2xl sm:text-3xl ${
                         activeService === service.id ? "text-white" : "text-orange-500"
                       }`}
                     />
                   </div>
 
-                  <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
-                  <p className="text-sm leading-relaxed">{service.desc}</p>
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2">{service.title}</h3>
+                  <p className="text-xs sm:text-sm leading-relaxed">{service.desc}</p>
                 </div>
               ))}
             </div>

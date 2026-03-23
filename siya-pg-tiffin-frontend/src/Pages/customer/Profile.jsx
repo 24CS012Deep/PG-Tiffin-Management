@@ -10,6 +10,8 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -51,6 +53,9 @@ const Profile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "currentPassword") {
+      setIsPasswordVerified(false);
+    }
     setFormData({ ...formData, [name]: value });
   };
 
@@ -60,6 +65,10 @@ const Profile = () => {
     setSuccess("");
 
     if (formData.newPassword) {
+      if (!isPasswordVerified) {
+        setError("Please verify your current password first");
+        return;
+      }
       if (formData.newPassword.length < 6) {
         setError("New password must be at least 6 characters");
         return;
@@ -94,6 +103,30 @@ const Profile = () => {
     }
   };
 
+  const handleVerifyCurrentPassword = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!formData.currentPassword) {
+      setError("Please enter your current password first");
+      return;
+    }
+
+    try {
+      setIsVerifyingPassword(true);
+      await API.post("/customer/profile/verify-password", {
+        currentPassword: formData.currentPassword,
+      });
+      setIsPasswordVerified(true);
+      setSuccess("Current password verified. You can set a new password now.");
+    } catch (err) {
+      setIsPasswordVerified(false);
+      setError(err.response?.data?.message || "Failed to verify current password");
+    } finally {
+      setIsVerifyingPassword(false);
+    }
+  };
+
   const handleCancel = () => {
     setFormData({
       name: user.name || "",
@@ -107,6 +140,8 @@ const Profile = () => {
     });
     setEditMode(false);
     setError("");
+    setSuccess("");
+    setIsPasswordVerified(false);
   };
 
   if (loading) {
@@ -183,7 +218,16 @@ const Profile = () => {
                 </div>
               </div>
               <button
-                onClick={() => setEditMode(true)}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                  }));
+                  setIsPasswordVerified(false);
+                  setEditMode(true);
+                }}
                 className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition"
               >
                 Edit Profile
@@ -223,7 +267,6 @@ const Profile = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
-                  placeholder="Optional"
                 />
               </div>
 
@@ -235,7 +278,6 @@ const Profile = () => {
                   onChange={handleInputChange}
                   className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
                   rows="2"
-                  placeholder="Optional"
                 />
               </div>
 
@@ -266,6 +308,7 @@ const Profile = () => {
                         name="currentPassword"
                         value={formData.currentPassword}
                         onChange={handleInputChange}
+                        autoComplete="new-password"
                         className="w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-orange-500"
                       />
                       <button
@@ -275,6 +318,19 @@ const Profile = () => {
                       >
                         {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
                       </button>
+                    </div>
+                    <div className="mt-2 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleVerifyCurrentPassword}
+                        disabled={isVerifyingPassword}
+                        className="bg-gray-800 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-900 disabled:opacity-60"
+                      >
+                        {isVerifyingPassword ? "Verifying..." : "Verify Current Password"}
+                      </button>
+                      {isPasswordVerified && (
+                        <span className="text-sm text-green-600 font-medium">Verified</span>
+                      )}
                     </div>
                   </div>
 
@@ -286,7 +342,9 @@ const Profile = () => {
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleInputChange}
-                        className="w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-orange-500"
+                        disabled={!isPasswordVerified}
+                        autoComplete="new-password"
+                        className="w-full border rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       />
                       <button
                         type="button"
@@ -305,7 +363,9 @@ const Profile = () => {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                      disabled={!isPasswordVerified}
+                      autoComplete="new-password"
+                      className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>

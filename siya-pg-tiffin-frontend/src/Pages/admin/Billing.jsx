@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { FiDollarSign, FiCheckCircle, FiTrash2 } from "react-icons/fi";
+import { FiCheckCircle, FiTrash2 } from "react-icons/fi";
 
 const Billing = () => {
   const [billings, setBillings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [generating, setGenerating] = useState(false);
+
 
   useEffect(() => {
     fetchBillings();
@@ -26,22 +26,7 @@ const Billing = () => {
     }
   };
 
-  const generateBills = async () => {
-    try {
-      setGenerating(true);
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      await API.post("/admin/billings/generate", {
-        month: currentMonth,
-        type: "tiffin"
-      });
-      fetchBillings();
-      alert("Bills generated successfully!");
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to generate bills");
-    } finally {
-      setGenerating(false);
-    }
-  };
+
 
   const updateBillingStatus = async (id, status, paymentMethod = "") => {
     try {
@@ -114,16 +99,8 @@ Thank you for choosing SwadBox!
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold">Monthly Billing</h2>
-        <button
-          onClick={generateBills}
-          disabled={generating}
-          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2 disabled:opacity-50"
-        >
-          <FiDollarSign />
-          {generating ? "Generating..." : "Generate Bills"}
-        </button>
       </div>
 
       {error && (

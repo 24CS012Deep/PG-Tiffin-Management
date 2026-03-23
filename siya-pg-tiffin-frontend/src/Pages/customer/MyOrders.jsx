@@ -51,6 +51,13 @@ const MyOrders = () => {
     }
   };
 
+  const canCancelOrder = (order) => {
+    if (order.status !== "live") return false;
+    const createdAt = new Date(order.createdAt || order.date).getTime();
+    if (Number.isNaN(createdAt)) return false;
+    return Date.now() - createdAt <= 5 * 60 * 1000;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -165,13 +172,18 @@ const MyOrders = () => {
                 </div>
               )}
 
-              {order.status === 'live' && (
+              {order.status === 'live' && canCancelOrder(order) && (
                 <button
                   onClick={() => cancelOrder(order._id)}
                   className="text-red-500 hover:text-red-600 flex items-center gap-1 text-sm"
                 >
                   <FiXCircle /> Cancel Order
                 </button>
+              )}
+              {order.status === 'live' && !canCancelOrder(order) && (
+                <p className="text-xs text-gray-500">
+                  Cancellation window closed (allowed only within 5 minutes).
+                </p>
               )}
             </div>
           ))}

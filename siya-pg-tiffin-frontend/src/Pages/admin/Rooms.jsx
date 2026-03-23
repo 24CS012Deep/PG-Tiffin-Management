@@ -274,27 +274,27 @@ const Rooms = () => {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">PG Rooms Management</h2>
+    <div className="px-2 sm:px-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold">PG Rooms Management</h2>
         <button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
+          className="bg-orange-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           <FiHome /> Add New Room
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded mb-4 sm:mb-6 text-sm">
           {error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {rooms.map((room) => {
           const occupiedCount = room.students?.length || 0;
           const occupancyColor = getOccupancyColor(occupiedCount, room.capacity);
@@ -307,27 +307,27 @@ const Rooms = () => {
                 occupiedCount < room.capacity ? 'bg-yellow-500' : 'bg-red-500'
               }`}></div>
               
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {/* Room Number and Actions */}
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-800">Room {room.roomNumber}</h3>
-                    <p className="text-sm text-gray-500 flex items-center gap-1">
-                      <FontAwesomeIcon icon={faLayerGroup} className="text-orange-500" />
-                      Floor {room.floor}
+                <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">Room {room.roomNumber}</h3>
+                    <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
+                      <FontAwesomeIcon icon={faLayerGroup} className="text-orange-500 flex-shrink-0" />
+                      <span>Floor {room.floor}</span>
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                     <button
                       onClick={() => openEditModal(room)}
-                      className="text-blue-500 hover:text-blue-600 p-2 hover:bg-blue-50 rounded-lg transition"
+                      className="text-blue-500 hover:text-blue-600 p-1.5 sm:p-2 hover:bg-blue-50 rounded-lg transition text-sm sm:text-base"
                       title="Edit Room"
                     >
                       <FiEdit2 />
                     </button>
                     <button
                       onClick={() => handleDelete(room._id)}
-                      className="text-red-500 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition"
+                      className="text-red-500 hover:text-red-600 p-1.5 sm:p-2 hover:bg-red-50 rounded-lg transition text-sm sm:text-base"
                       title="Delete Room"
                     >
                       <FiTrash2 />
@@ -336,57 +336,64 @@ const Rooms = () => {
                 </div>
 
                 {/* Room Type and Bed Type Badges */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getRoomTypeBadge(room.roomType)}`}>
-                    <FontAwesomeIcon icon={room.roomType === 'ac' ? faSnowflake : faWind} />
+                <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getRoomTypeBadge(room.roomType)}`}>
+                    <FontAwesomeIcon icon={room.roomType === 'ac' ? faSnowflake : faWind} className="text-xs" />
                     {room.roomType === 'ac' ? 'AC' : 'Non-AC'}
                   </span>
-                  <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                  <span className="bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                     {getBedTypeIcon(room.bedType)} 
-                    {room.bedType?.charAt(0).toUpperCase() + room.bedType?.slice(1)} Bed
+                    <span className="hidden sm:inline">{room.bedType?.charAt(0).toUpperCase() + room.bedType?.slice(1)} Bed</span>
+                    <span className="sm:hidden">{room.bedType?.charAt(0).toUpperCase()}</span>
                   </span>
-                  <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                  <span className="bg-indigo-100 text-indigo-700 px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                     <FontAwesomeIcon icon={
                       room.furnished === 'fully' ? faStarFull :
                       room.furnished === 'semi' ? faStarHalfAlt : faStar
-                    } />
-                    {room.furnished === 'fully' ? 'Fully' :
-                     room.furnished === 'semi' ? 'Semi' : 'Un'} Furnished
+                    } className="text-xs" />
+                    <span className="hidden sm:inline">
+                      {room.furnished === 'fully' ? 'Fully' :
+                       room.furnished === 'semi' ? 'Semi' : 'Un'} Furnished
+                    </span>
+                    <span className="sm:hidden">
+                      {room.furnished === 'fully' ? 'F' :
+                       room.furnished === 'semi' ? 'S' : 'U'}
+                    </span>
                   </span>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <FiUsers className="text-orange-500" />
+                      <FiUsers className="text-orange-500 text-xs sm:text-base" />
                       <span className="text-xs">Capacity</span>
                     </div>
-                    <p className="text-lg font-bold flex items-center gap-1">
-                      {room.capacity} {room.capacity > 1 ? 'Beds' : 'Bed'}
+                    <p className="text-base sm:text-lg font-bold flex items-center gap-1">
+                      {room.capacity} <span className="text-xs sm:text-sm">{room.capacity > 1 ? 'Beds' : 'Bed'}</span>
                     </p>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <FiDollarSign className="text-orange-500" />
+                      <FiDollarSign className="text-orange-500 text-xs sm:text-base" />
                       <span className="text-xs">Rent</span>
                     </div>
-                    <p className="text-lg font-bold">₹{room.rent}</p>
+                    <p className="text-base sm:text-lg font-bold">₹{room.rent}</p>
                   </div>
                 </div>
 
                 {/* Occupancy Status */}
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">Occupancy Status</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${occupancyColor}`}>
-                      <FontAwesomeIcon icon={faUserGraduate} />
-                      {occupiedCount}/{room.capacity} Occupied
+                <div className="mb-3 sm:mb-4">
+                  <div className="flex justify-between items-center mb-2 gap-2">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Occupancy</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 flex-shrink-0 ${occupancyColor}`}>
+                      <FontAwesomeIcon icon={faUserGraduate} className="text-xs" />
+                      {occupiedCount}/{room.capacity}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
-                      className={`h-2.5 rounded-full ${
+                      className={`h-2 rounded-full ${
                         occupiedCount === 0 ? 'bg-green-500' :
                         occupiedCount < room.capacity ? 'bg-yellow-500' : 'bg-red-500'
                       }`}
@@ -397,13 +404,14 @@ const Rooms = () => {
 
                 {/* Amenities */}
                 {room.amenities?.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Amenities:</p>
+                  <div className="mb-3 sm:mb-4">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">Amenities:</p>
                     <div className="flex flex-wrap gap-1">
                       {room.amenities.map((a, i) => (
                         <span key={i} className="bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full border border-orange-200 flex items-center gap-1">
                           <FontAwesomeIcon icon={getAmenityIcon(a)} className="text-xs" />
-                          {a}
+                          <span className="hidden sm:inline">{a}</span>
+                          <span className="sm:hidden">{a.substring(0, 3)}</span>
                         </span>
                       ))}
                     </div>
@@ -411,48 +419,48 @@ const Rooms = () => {
                 )}
 
                 {/* Additional Features */}
-                <div className="flex gap-3 mb-4 text-sm">
+                <div className="flex flex-wrap gap-2 mb-3 sm:mb-4 text-xs sm:text-sm">
                   {room.attachedBathroom && (
-                    <span className="text-green-600 flex items-center gap-1">
-                      <FontAwesomeIcon icon={faCheckCircle} /> Attached Bathroom
+                    <span className="text-green-600 flex items-center gap-1 whitespace-nowrap">
+                      <FontAwesomeIcon icon={faCheckCircle} /> Bath
                     </span>
                   )}
                   {room.balcony && (
-                    <span className="text-green-600 flex items-center gap-1">
+                    <span className="text-green-600 flex items-center gap-1 whitespace-nowrap">
                       <FontAwesomeIcon icon={faCheckCircle} /> Balcony
                     </span>
                   )}
                 </div>
 
                 {/* Students List */}
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                    <FontAwesomeIcon icon={faUserGraduate} /> Current Students:
+                <div className="border-t pt-3 sm:pt-4">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                    <FontAwesomeIcon icon={faUserGraduate} className="text-xs" /> Current Students:
                   </p>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1 sm:space-y-2 max-h-32 sm:max-h-48 overflow-y-auto">
                     {room.students?.length === 0 ? (
-                      <li className="text-green-600 text-sm bg-green-50 p-2 rounded-lg text-center flex items-center justify-center gap-1">
-                        <FontAwesomeIcon icon={faDoorOpen} /> Room Available for Booking
+                      <li className="text-green-600 text-xs sm:text-sm bg-green-50 p-2 rounded-lg text-center flex items-center justify-center gap-1">
+                        <FontAwesomeIcon icon={faDoorOpen} /> Available
                       </li>
                     ) : (
                       room.students?.map((student) => (
-                        <li key={student._id} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg">
-                          <div className="flex items-start gap-2">
-                            <FontAwesomeIcon icon={faUser} className="text-orange-500 mt-1" />
-                            <div>
-                              <span className="font-medium text-sm">{student.name}</span>
-                              <p className="text-xs text-gray-500 flex items-center gap-1">
-                                <FontAwesomeIcon icon={faEnvelope} className="text-xs" />
-                                {student.email}
+                        <li key={student._id} className="flex justify-between items-start bg-gray-50 p-2 rounded-lg gap-2">
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
+                            <FontAwesomeIcon icon={faUser} className="text-orange-500 mt-0.5 text-xs flex-shrink-0" />
+                            <div className="min-w-0">
+                              <span className="font-medium text-xs sm:text-sm block truncate">{student.name}</span>
+                              <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                                <FontAwesomeIcon icon={faEnvelope} className="text-xs flex-shrink-0" />
+                                <span className="truncate">{student.email}</span>
                               </p>
                             </div>
                           </div>
                           <button
                             onClick={() => handleRemoveStudent(room._id, student._id)}
-                            className="text-red-500 hover:text-red-600 p-1 hover:bg-red-50 rounded transition"
+                            className="text-red-500 hover:text-red-600 p-1 hover:bg-red-50 rounded transition flex-shrink-0"
                             title="Remove Student"
                           >
-                            <FiUserMinus />
+                            <FiUserMinus className="text-sm" />
                           </button>
                         </li>
                       ))
@@ -464,9 +472,9 @@ const Rooms = () => {
                 {room.students?.length < room.capacity && (
                   <button
                     onClick={() => openAssignModal(room)}
-                    className="mt-4 w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 text-sm font-medium"
+                    className="mt-3 sm:mt-4 w-full bg-green-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 text-xs sm:text-sm font-medium"
                   >
-                    <FiUserPlus /> Assign New Student
+                    <FiUserPlus /> Assign Student
                   </button>
                 )}
               </div>
@@ -477,9 +485,9 @@ const Rooms = () => {
 
       {/* Add/Edit Room Modal - Updated with new fields */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white p-6 rounded-xl max-w-2xl w-full my-8">
-            <h3 className="text-2xl font-bold mb-6 text-orange-500 flex items-center gap-2">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white p-4 sm:p-6 rounded-xl max-w-2xl w-full my-8">
+            <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-orange-500 flex items-center gap-2">
               {editingRoom ? (
                 <>
                   <FiEdit2 /> Edit Room
@@ -490,40 +498,40 @@ const Rooms = () => {
                 </>
               )}
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 max-h-96 sm:max-h-none overflow-y-auto sm:overflow-y-visible">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Basic Information */}
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Number *</label>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Room Number *</label>
                   <input
                     type="text"
                     name="roomNumber"
                     value={formData.roomNumber}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                     required
                   />
                 </div>
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Floor *</label>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Floor *</label>
                   <input
                     type="number"
                     name="floor"
                     value={formData.floor}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                     required
                   />
                 </div>
 
                 {/* Capacity and Rent */}
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacity *</label>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Capacity *</label>
                   <select
                     name="capacity"
                     value={formData.capacity}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                     required
                   >
                     <option value={1}>1 Person</option>
@@ -532,26 +540,26 @@ const Rooms = () => {
                     <option value={4}>4 People</option>
                   </select>
                 </div>
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rent (₹) *</label>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Rent (₹) *</label>
                   <input
                     type="number"
                     name="rent"
                     value={formData.rent}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                     required
                   />
                 </div>
 
                 {/* Room Type */}
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Type *</label>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Room Type *</label>
                   <select
                     name="roomType"
                     value={formData.roomType}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                   >
                     {roomTypeOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -562,13 +570,13 @@ const Rooms = () => {
                 </div>
 
                 {/* Bed Type */}
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bed Type *</label>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Bed Type *</label>
                   <select
                     name="bedType"
                     value={formData.bedType}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                   >
                     {bedTypeOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -579,13 +587,13 @@ const Rooms = () => {
                 </div>
 
                 {/* Furnished Status */}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Furnished Status *</label>
+                <div className="md:col-span-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Furnished Status *</label>
                   <select
                     name="furnished"
                     value={formData.furnished}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                   >
                     {furnishedOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -596,18 +604,18 @@ const Rooms = () => {
                 </div>
 
                 {/* Checkboxes */}
-                <div className="col-span-2">
-                  <div className="flex gap-6">
+                <div className="md:col-span-2">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         name="attachedBathroom"
                         checked={formData.attachedBathroom}
                         onChange={handleInputChange}
-                        className="rounded text-orange-500 focus:ring-orange-500"
+                        className="rounded text-orange-500 focus:ring-orange-500 w-4 h-4"
                       />
-                      <span className="text-sm flex items-center gap-1">
-                        <FontAwesomeIcon icon={faToilet} /> Attached Bathroom
+                      <span className="text-xs sm:text-sm flex items-center gap-1">
+                        <FontAwesomeIcon icon={faToilet} className="text-xs" /> Attached Bathroom
                       </span>
                     </label>
                     <label className="flex items-center gap-2">
@@ -616,30 +624,31 @@ const Rooms = () => {
                         name="balcony"
                         checked={formData.balcony}
                         onChange={handleInputChange}
-                        className="rounded text-orange-500 focus:ring-orange-500"
+                        className="rounded text-orange-500 focus:ring-orange-500 w-4 h-4"
                       />
-                      <span className="text-sm flex items-center gap-1">
-                        <FontAwesomeIcon icon={faTree} /> Balcony
+                      <span className="text-xs sm:text-sm flex items-center gap-1">
+                        <FontAwesomeIcon icon={faTree} className="text-xs" /> Balcony
                       </span>
                     </label>
                   </div>
                 </div>
 
                 {/* Amenities */}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Amenities</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     {amenityOptions.map(amenity => (
                       <label key={amenity} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-orange-50">
                         <input
                           type="checkbox"
                           checked={formData.amenities.includes(amenity)}
                           onChange={() => handleAmenityChange(amenity)}
-                          className="rounded text-orange-500 focus:ring-orange-500"
+                          className="rounded text-orange-500 focus:ring-orange-500 w-4 h-4"
                         />
-                        <span className="text-sm flex items-center gap-1">
-                          <FontAwesomeIcon icon={getAmenityIcon(amenity)} />
-                          {amenity}
+                        <span className="text-xs sm:text-sm flex items-center gap-1">
+                          <FontAwesomeIcon icon={getAmenityIcon(amenity)} className="text-xs" />
+                          <span className="hidden sm:inline">{amenity}</span>
+                          <span className="sm:hidden">{amenity.substring(0, 3)}</span>
                         </span>
                       </label>
                     ))}
@@ -647,23 +656,23 @@ const Rooms = () => {
                 </div>
 
                 {/* Details */}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Additional Details</label>
+                <div className="md:col-span-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Additional Details</label>
                   <textarea
                     name="details"
                     value={formData.details}
                     onChange={handleInputChange}
-                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500"
-                    rows="3"
+                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
+                    rows="2"
                     placeholder="Any additional information about the room..."
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4">
                 <button
                   type="submit"
-                  className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 flex-1 font-medium"
+                  className="bg-orange-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-600 flex-1 font-medium text-sm sm:text-base"
                 >
                   {editingRoom ? "Update Room" : "Save Room"}
                 </button>
@@ -673,7 +682,7 @@ const Rooms = () => {
                     setShowModal(false);
                     resetForm();
                   }}
-                  className="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-medium"
+                  className="bg-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-400 font-medium text-sm sm:text-base"
                 >
                   Cancel
                 </button>
@@ -685,20 +694,20 @@ const Rooms = () => {
 
       {/* Assign Student Modal - Enhanced */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl max-w-md w-full">
-            <h3 className="text-2xl font-bold mb-4 text-green-600 flex items-center gap-2">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-4 sm:p-6 rounded-xl max-w-md w-full">
+            <h3 className="text-lg sm:text-2xl font-bold mb-2 sm:mb-4 text-green-600 flex items-center gap-2">
               <FontAwesomeIcon icon={faUserGraduate} /> Assign Student
             </h3>
-            <p className="text-gray-600 mb-4 flex items-center gap-1">
-              <FontAwesomeIcon icon={faDoorOpen} />
-              Assign a student to Room <span className="font-bold text-orange-500 mx-1">{selectedRoom?.roomNumber}</span>
+            <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 flex items-center gap-1">
+              <FontAwesomeIcon icon={faDoorOpen} className="text-xs" />
+              Assign to Room <span className="font-bold text-orange-500 mx-1">{selectedRoom?.roomNumber}</span>
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <select
                 value={selectedStudent}
                 onChange={(e) => setSelectedStudent(e.target.value)}
-                className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500"
+                className="w-full border rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:ring-2 focus:ring-green-500 text-sm"
               >
                 <option value="">Select a student</option>
                 {students
@@ -710,19 +719,19 @@ const Rooms = () => {
                   ))}
               </select>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={handleAssignStudent}
-                  className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 flex-1 font-medium flex items-center justify-center gap-2"
+                  className="bg-green-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-600 flex-1 font-medium flex items-center justify-center gap-2 text-xs sm:text-sm"
                 >
-                  <FiUserPlus /> Assign Student
+                  <FiUserPlus /> Assign
                 </button>
                 <button
                   onClick={() => {
                     setShowAssignModal(false);
                     setSelectedStudent("");
                   }}
-                  className="bg-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-400 font-medium"
+                  className="bg-gray-300 text-gray-700 px-3 sm:px-4 py-2 rounded-lg hover:bg-gray-400 font-medium text-xs sm:text-sm"
                 >
                   Cancel
                 </button>
