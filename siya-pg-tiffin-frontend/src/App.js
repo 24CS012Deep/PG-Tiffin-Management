@@ -20,6 +20,7 @@ import Users from "./Pages/admin/Users";
 import TiffinPlans from "./Pages/admin/TiffinPlans";
 import Orders from "./Pages/admin/Orders";
 import Billing from "./Pages/admin/Billing";
+import GenerateBills from "./Pages/admin/GenerateBills";
 import Reports from "./Pages/admin/Reports";
 import Queries from "./Pages/admin/Queries";
 import Settings from "./Pages/admin/Settings";
@@ -65,6 +66,7 @@ function App() {
           <Route path="tiffin" element={<TiffinPlans />} />
           <Route path="orders" element={<Orders />} />
           <Route path="billing" element={<Billing />} />
+          <Route path="generate-bills" element={<GenerateBills />} />
           <Route path="reports" element={<Reports />} />
           <Route path="queries" element={<Queries />} />
           <Route path="settings" element={<Settings />} />

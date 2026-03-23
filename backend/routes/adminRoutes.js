@@ -31,6 +31,11 @@ import {
 } from "../controllers/billingController.js";
 
 import {
+  generateBillReport,
+  exportBillCSV
+} from "../controllers/billGenerationController.js";
+
+import {
   getAllQueries,
   answerQuery,
   deleteQuery
@@ -43,10 +48,26 @@ import {
   getDashboardStats
 } from "../controllers/authController.js";
 
+import {
+  getAdminProfile,
+  updateAdminProfile,
+  changeAdminPassword
+} from "../controllers/adminSettingsController.js";
+
+import { getReportsData } from "../controllers/reportsController.js";
+
 const router = express.Router();
 
 // Dashboard
 router.get("/stats", protect, adminOnly, getDashboardStats);
+
+// Reports & Analytics
+router.get("/reports", protect, adminOnly, getReportsData);
+
+// Admin Profile & Settings
+router.get("/profile", protect, adminOnly, getAdminProfile);
+router.put("/profile", protect, adminOnly, updateAdminProfile);
+router.put("/change-password", protect, adminOnly, changeAdminPassword);
 
 // User Management
 router.get("/users", protect, adminOnly, getAllUsers);
@@ -78,6 +99,10 @@ router.get("/billings", protect, adminOnly, getAllBillings);
 router.post("/billings/generate", protect, adminOnly, generateBills);
 router.put("/billings/:id/status", protect, adminOnly, updateBillingStatus);
 router.delete("/billings/:id", protect, adminOnly, deleteBilling);
+
+// Bill Generation Report Routes
+router.post("/billings/generate-report", protect, adminOnly, generateBillReport);
+router.get("/billings/export-csv", protect, adminOnly, exportBillCSV);
 
 // Query Routes
 router.get("/queries", protect, adminOnly, getAllQueries);

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { 
   FiHome, FiUsers, FiBox, FiShoppingBag, 
   FiDollarSign, FiBarChart2, FiSettings, FiLogOut,
-  FiMessageSquare, FiMenu, FiX
+  FiMessageSquare, FiMenu, FiX, FiFileText
 } from "react-icons/fi";
 
 const Sidebar = ({ isOpen = true, onClose = () => {} }) => {
@@ -18,6 +18,7 @@ const Sidebar = ({ isOpen = true, onClose = () => {} }) => {
     { name: "Tiffin Plans", path: "/admin/tiffin", icon: FiBox },
     { name: "Orders", path: "/admin/orders", icon: FiShoppingBag },
     { name: "Billing", path: "/admin/billing", icon: FiDollarSign },
+    { name: "Generate Bills", path: "/admin/generate-bills", icon: FiFileText },
     { name: "Reports", path: "/admin/reports", icon: FiBarChart2 },
     { name: "Queries", path: "/admin/queries", icon: FiMessageSquare },
     { name: "Settings", path: "/admin/settings", icon: FiSettings },
