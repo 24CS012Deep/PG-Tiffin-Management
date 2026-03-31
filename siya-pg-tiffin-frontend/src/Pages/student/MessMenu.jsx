@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { FiCalendar, FiClock, FiCoffee, FiSun, FiMoon, FiActivity, FiTag } from "react-icons/fi";
+import { FiCalendar, FiClock, FiCoffee, FiSun, FiMoon, FiActivity, FiTag, FiBox, FiStar, FiDroplet, FiHeart, FiMenu } from "react-icons/fi";
 
 const MessMenu = () => {
   const [menus, setMenus] = useState([]);
@@ -13,14 +13,24 @@ const MessMenu = () => {
       try {
         setLoading(true);
         const res = await API.get("/student/tiffin-plans");
-        const plansWithMenu = res.data.filter(plan => 
-          plan.menu?.some(m => m.date === selectedDate)
-        );
-        setMenus(plansWithMenu);
+        console.log("📦 Mess Menu Response:", res.data);
+        
+        if (!Array.isArray(res.data)) {
+          console.warn("⚠️ Response is not an array");
+          setMenus([]);
+          return;
+        }
+        
+        // Show ALL plans, regardless of whether they have menus
+        console.log(`📊 Total plans fetched: ${res.data.length}`);
+        console.log("Plans:", res.data.map(p => ({ name: p.name, hasMenu: p.menu?.length > 0 })));
+        
+        setMenus(res.data);
         setError("");
       } catch (err) {
-        console.error("Failed to fetch menu:", err);
+        console.error("❌ Failed to fetch menu:", err);
         setError("Failed to load mess menu");
+        setMenus([]);
       } finally {
         setLoading(false);
       }
@@ -37,9 +47,21 @@ const MessMenu = () => {
 
   const getDayGreeting = () => {
     const today = new Date().toISOString().split('T')[0];
-    if (selectedDate === today) return "Today's Specials";
+    if (selectedDate === today) return "Today's Special Menu";
     if (selectedDate > today) return "Upcoming Menu";
     return "Past Menu";
+  };
+
+  const getItemIcon = (item) => {
+    const itemLower = item.toLowerCase();
+    if (itemLower.includes('soup') || itemLower.includes('dal')) return <FiDroplet className="text-orange-500" />;
+    if (itemLower.includes('rice') || itemLower.includes('biryani')) return <FiBox className="text-amber-600" />;
+    if (itemLower.includes('bread') || itemLower.includes('roti') || itemLower.includes('naan')) return <FiBox className="text-yellow-700" />;
+    if (itemLower.includes('chicken') || itemLower.includes('meat')) return <FiHeart className="text-red-600" />;
+    if (itemLower.includes('fish') || itemLower.includes('prawn')) return <FiDroplet className="text-blue-500" />;
+    if (itemLower.includes('salad') || itemLower.includes('vegetable')) return <FiActivity className="text-green-600" />;
+    if (itemLower.includes('dessert') || itemLower.includes('sweet')) return <FiBox className="text-pink-500" />;
+    return <FiMenu className="text-gray-600" />;
   };
 
   if (loading) {
@@ -51,29 +73,34 @@ const MessMenu = () => {
   }
 
   return (
-    <div className="min-h-screen pb-10 max-w-5xl mx-auto">
+    <div className="min-h-screen pb-10">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 mt-4 md:mt-0">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight flex items-center gap-3">
-             <span className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
-               <FiActivity />
+             <span className="w-14 h-14 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-300 group-hover:scale-110 transition-transform">
+               <FiBox className="text-2xl" />
              </span>
-             Mess Menu
+             Today's Menu
           </h1>
-          <p className="text-gray-500 text-base mt-2 ml-1 font-medium">{getDayGreeting()}</p>
+          <p className="text-gray-500 text-base mt-3 ml-1 font-medium flex items-center gap-2">
+            <FiStar className="text-amber-500" /> {getDayGreeting()}
+          </p>
         </div>
 
-        {/* Date Selector Pill */}
-        <div className="relative group self-stretch md:self-auto">
-           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-             <FiCalendar className="text-orange-500 text-lg group-hover:scale-110 transition-transform" />
+        {/* Date Selector */}
+        <div className="w-full md:w-auto">
+           <div className="relative group">
+             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+               <FiCalendar className="text-white text-lg bg-orange-500 rounded-full p-1 w-6 h-6 flex items-center justify-center" />
+             </div>
+             <input
+               type="date"
+               value={selectedDate}
+               onChange={(e) => setSelectedDate(e.target.value)}
+               className="w-full md:w-auto bg-white border-2 border-orange-200 rounded-2xl pl-12 pr-6 py-3.5 focus:ring-4 focus:ring-orange-100 focus:border-orange-500 outline-none transition-all shadow-md font-bold text-gray-700 hover:border-orange-400 cursor-pointer text-base"
+             />
            </div>
-           <input
-             type="date"
-             value={selectedDate}
-             onChange={(e) => setSelectedDate(e.target.value)}
-             className="w-full bg-white border border-gray-200 rounded-2xl pl-12 pr-6 py-4 focus:ring-4 focus:ring-orange-100 focus:border-orange-500 outline-none transition-all shadow-sm font-semibold text-gray-700 hover:border-gray-300 cursor-pointer text-base"
-           />
         </div>
       </div>
 
@@ -84,73 +111,76 @@ const MessMenu = () => {
       )}
 
       {menus.length === 0 ? (
-        <div className="bg-white rounded-3xl shadow-sm border border-dashed border-gray-300 p-16 text-center mt-10">
-          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-            <FiCalendar className="text-5xl text-gray-300 absolute" />
-            <div className="w-10 h-10 bg-white border border-gray-100 rounded-full absolute -bottom-2 -right-2 flex items-center justify-center shadow-sm">
-               <FiClock className="text-gray-400" />
-            </div>
+        <div className="bg-white rounded-3xl shadow-sm border-2 border-dashed border-gray-300 p-16 text-center mt-10">
+          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FiBox className="text-5xl text-gray-300" />
           </div>
           <h2 className="text-2xl font-bold mb-3 text-gray-800">No Menu Scheduled</h2>
           <p className="text-gray-500 text-base max-w-md mx-auto leading-relaxed">The kitchen staff has not published a menu for this date yet. Try selecting the current day or check back later.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {menus.map((plan) => {
-            const todaysMenu = plan.menu.find(m => m.date === selectedDate);
+            const todaysMenu = plan.menu?.find(m => m.date === selectedDate);
             const isVeg = plan.type === 'veg';
+            const hasMenu = todaysMenu && todaysMenu.items?.length > 0;
             
             return (
               <div 
                 key={plan._id} 
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative"
+                className={`bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative flex flex-col`}
               >
-                {/* Decorative Pattern Top */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
-                
-                <div className="p-6 md:p-8 flex-1">
-                  <div className="flex justify-between items-start mb-6">
-                     <span className={`px-3 py-1 text-[11px] font-black uppercase tracking-wider rounded-full flex items-center gap-1.5 shadow-sm border ${
-                        isVeg ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
-                        plan.type === 'non-veg' ? 'bg-red-50 text-red-700 border-red-100' : 
-                        'bg-indigo-50 text-indigo-700 border-indigo-100'
-                     }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full shadow-sm ${
-                           isVeg ? 'bg-emerald-500' : plan.type === 'non-veg' ? 'bg-red-500' : 'bg-indigo-500'
-                        }`}></span>
-                        {plan.type}
-                     </span>
-                     
-                     <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 group-hover:bg-white group-hover:shadow-md transition-all">
-                        {getMealIcon(plan.mealTypes?.join(',') || 'lunch')}
-                     </div>
+                {/* Top Accent Line */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500"></div>
+
+                {/* Decorative Background */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-50 to-transparent rounded-bl-2xl -z-10 group-hover:scale-110 transition-transform"></div>
+
+                <div className="p-5 flex-1 flex flex-col">
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-3 gap-3">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-orange-600 transition-colors">{plan.name}</h3>
+                      <p className="text-gray-500 text-[12px] line-clamp-1">{plan.description || "Nutritious meal option"}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-lg border whitespace-nowrap shadow-sm ${
+                      isVeg ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
+                      plan.type === 'non-veg' ? 'bg-red-50 text-red-700 border-red-100' : 
+                      'bg-indigo-50 text-indigo-700 border-indigo-100'
+                    }`}>
+                      {plan.type}
+                    </span>
                   </div>
 
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2 leading-tight group-hover:text-orange-600 transition-colors">{plan.name}</h2>
-                  <p className="text-gray-500 text-sm mb-6 line-clamp-2 leading-relaxed">{plan.description}</p>
-                  
-                  <div className="bg-gray-50/80 backdrop-blur-sm rounded-2xl p-5 border border-gray-100">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                      <FiTag /> Menu Items
-                    </h3>
-                    <ul className="space-y-3 relative">
-                      {/* Timeline line */}
-                      <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gray-200"></div>
-                      
-                      {todaysMenu.items.map((item, idx) => (
-                        <li key={idx} className="flex items-start gap-4 text-gray-700 font-medium pl-[6px]">
-                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 z-10 border-2 border-white shadow-sm flex-shrink-0 ${idx % 2 === 0 ? 'bg-orange-500' : 'bg-amber-400'}`}></div>
-                          <span className="leading-snug">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                  {/* Menu Items */}
+                  {hasMenu ? (
+                    <div className="bg-gradient-to-br from-orange-50/50 to-amber-50/30 rounded-lg p-3 border border-orange-100/50 flex-1 mb-3">
+                      <p className="text-[10px] font-bold text-orange-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <FiMenu className="text-base" /> Today's Items
+                      </p>
+                      <div className="space-y-1.5">
+                        {todaysMenu.items.slice(0, 3).map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-gray-700 text-[12px] font-medium">
+                            <span className="text-base flex-shrink-0">{getItemIcon(item)}</span>
+                            <span className="line-clamp-1">{item}</span>
+                          </div>
+                        ))}
+                        {todaysMenu.items.length > 3 && (
+                          <p className="text-[10px] text-gray-500 font-semibold pt-1">+{todaysMenu.items.length - 3} more items</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50 rounded-lg p-3 border border-amber-200/50 mb-3 text-center">
+                      <p className="text-[11px] text-amber-900 font-semibold flex items-center justify-center gap-1.5"><FiMenu className="text-amber-700" /> Menu Coming Soon</p>
+                    </div>
+                  )}
 
-                {/* Footer */}
-                <div className="px-6 md:px-8 py-5 border-t border-gray-100 bg-gray-50/50 flex justify-between items-center group-hover:bg-orange-50/50 transition-colors">
-                   <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Plan Price</div>
-                   <div className="text-xl font-black text-gray-800 tracking-tight">₹{plan.price}<span className="text-sm font-medium text-gray-400">/mo</span></div>
+                  {/* Price */}
+                  <div className="pt-3 border-t border-gray-100 text-center">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wide mb-1">Monthly Price</p>
+                    <p className="text-2xl font-black text-orange-600">₹{plan.price}</p>
+                  </div>
                 </div>
               </div>
             );

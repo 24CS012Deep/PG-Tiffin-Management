@@ -8,6 +8,8 @@ import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js"; 
 import customerRoutes from "./routes/customerRoutes.js"; 
+import inquiryRoutes from "./routes/inquiryRoutes.js";
+import publicRoutes from "./routes/publicRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +29,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/customer", customerRoutes); 
+app.use("/api/inquiry", inquiryRoutes);
+app.use("/api/public", publicRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 SwadBox API Running");

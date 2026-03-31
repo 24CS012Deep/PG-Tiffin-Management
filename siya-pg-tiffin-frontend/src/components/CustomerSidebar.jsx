@@ -3,14 +3,13 @@ import { useState } from "react";
 import { 
   FiHome, 
   FiShoppingBag, 
-  FiDollarSign, 
   FiBox, 
-  FiMessageSquare, 
   FiUser, 
   FiLogOut,
   FiMenu,
   FiX
 } from "react-icons/fi";
+import { MdReceiptLong, MdOutlineSupportAgent } from "react-icons/md";
 
 const CustomerSidebar = () => {
   const location = useLocation();
@@ -21,8 +20,8 @@ const CustomerSidebar = () => {
     { name: "Dashboard", path: "/customer", icon: FiHome },
     { name: "My Orders", path: "/customer/my-orders", icon: FiShoppingBag },
     { name: "Tiffin Plans", path: "/customer/tiffin-plans", icon: FiBox },
-    { name: "My Bills", path: "/customer/my-bills", icon: FiDollarSign },
-    { name: "Raise Query", path: "/customer/raise-query", icon: FiMessageSquare },
+    { name: "My Bills", path: "/customer/my-bills", icon: MdReceiptLong },
+    { name: "Raise Query", path: "/customer/raise-query", icon: MdOutlineSupportAgent },
     { name: "Profile", path: "/customer/profile", icon: FiUser },
   ];
 

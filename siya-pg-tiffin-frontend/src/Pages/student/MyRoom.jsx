@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
 import { FiHome, FiUsers, FiBox, FiCheckCircle, FiInfo, FiWind, FiSun } from "react-icons/fi";
+import { MdOutlineBed } from "react-icons/md";
 
 const MyRoom = () => {
   const [room, setRoom] = useState(null);
@@ -14,12 +15,8 @@ const MyRoom = () => {
   const fetchRoomDetails = async () => {
     try {
       setLoading(true);
-      const user = JSON.parse(localStorage.getItem("user"));
-      const res = await API.get("/student/rooms");
-      const userRoom = res.data.find(room => 
-        room.students?.some(s => s._id === user._id)
-      );
-      setRoom(userRoom);
+      const res = await API.get("/student/my-room");
+      setRoom(res.data);
       setError("");
     } catch (err) {
       console.error("Failed to fetch room:", err);
@@ -124,26 +121,10 @@ const MyRoom = () => {
                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Bed Type</p>
                     <p className="text-lg font-semibold text-gray-800 flex items-center gap-2 capitalize">
-                       <FiBox className="text-indigo-500" /> {room.bedType || 'Standard'}
+                       <MdOutlineBed className="text-indigo-500" /> {room.bedType || 'Standard'}
                     </p>
                   </div>
                 </div>
-
-                {/* Amenities */}
-                {room.amenities?.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <FiCheckCircle className="text-emerald-500" /> Included Amenities
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {room.amenities.map((a, i) => (
-                        <span key={i} className="bg-emerald-50 text-emerald-700 border border-emerald-100/50 px-3 py-1.5 rounded-lg text-sm font-medium capitalize flex items-center gap-1.5 shadow-sm">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> {a}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
              </div>
           </div>
 

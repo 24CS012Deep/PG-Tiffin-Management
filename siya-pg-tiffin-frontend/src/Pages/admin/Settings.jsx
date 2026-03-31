@@ -8,7 +8,6 @@ import {
   FiLock,
   FiEye,
   FiEyeOff,
-  FiSettings,
   FiSave,
   FiRefreshCw,
   FiCheckCircle,
@@ -18,9 +17,9 @@ import {
   FiX,
   FiGlobe,
   FiBell,
-  FiMoon,
   FiLoader,
 } from "react-icons/fi";
+import { RiSettings4Line } from "react-icons/ri";
 
 const Settings = () => {
   // ─── Admin Profile State ─────────────────────────────────
@@ -263,7 +262,7 @@ const Settings = () => {
   const sections = [
     { id: "profile", label: "Admin Profile", icon: <FiUser /> },
     { id: "password", label: "Change Password", icon: <FiLock /> },
-    { id: "preferences", label: "App Preferences", icon: <FiSettings /> },
+    { id: "preferences", label: "App Preferences", icon: <RiSettings4Line /> },
   ];
 
   if (profileLoading) {
@@ -283,7 +282,7 @@ const Settings = () => {
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
           <span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-2.5 rounded-xl shadow-lg shadow-orange-200">
-            <FiSettings className="text-xl" />
+            <RiSettings4Line className="text-xl" />
           </span>
           Settings
         </h1>
@@ -687,7 +686,7 @@ const Settings = () => {
             <div>
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <FiSettings className="text-orange-500" /> Application
+                  <RiSettings4Line className="text-orange-500" /> Application
                   Preferences
                 </h2>
                 <p className="text-gray-400 text-sm mt-0.5">

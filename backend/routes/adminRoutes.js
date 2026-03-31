@@ -27,7 +27,8 @@ import {
   getAllBillings,
   generateBills,
   updateBillingStatus,
-  deleteBilling
+  deleteBilling,
+  sendBillEmail
 } from "../controllers/billingController.js";
 
 import {
@@ -97,12 +98,15 @@ router.delete("/orders/:id", protect, adminOnly, deleteOrder);
 // Billing Routes
 router.get("/billings", protect, adminOnly, getAllBillings);
 router.post("/billings/generate", protect, adminOnly, generateBills);
-router.put("/billings/:id/status", protect, adminOnly, updateBillingStatus);
-router.delete("/billings/:id", protect, adminOnly, deleteBilling);
 
-// Bill Generation Report Routes
+// Bill Generation Report Routes — MUST come before /:id routes!
 router.post("/billings/generate-report", protect, adminOnly, generateBillReport);
 router.get("/billings/export-csv", protect, adminOnly, exportBillCSV);
+
+// Parameterized billing routes
+router.put("/billings/:id/status", protect, adminOnly, updateBillingStatus);
+router.post("/billings/:id/send-email", protect, adminOnly, sendBillEmail);
+router.delete("/billings/:id", protect, adminOnly, deleteBilling);
 
 // Query Routes
 router.get("/queries", protect, adminOnly, getAllQueries);

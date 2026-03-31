@@ -12,6 +12,7 @@ import SignIn from "./Pages/SignIn";
 import ForgotPassword from "./Pages/ForgotPassword";
 import ResetPassword from "./Pages/ResetPassword";
 import PGGallery from "./Pages/PGGallery";
+import TodayMenu from "./Pages/TodayMenu";
 
 // Admin Pages
 import Dashboard from "./components/Dashboard";
@@ -53,6 +54,7 @@ function App() {
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/pg-gallery" element={<PGGallery />} />
+        <Route path="/todays-menu" element={<TodayMenu />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={
@@ -101,7 +103,14 @@ function App() {
         </Route>
 
         {/* Catch-all route for 404 */}
-        <Route path="*" element={<div>Page Not Found</div>} />
+        <Route path="*" element={
+          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#fff7ed", fontFamily: "sans-serif", textAlign: "center", padding: "2rem" }}>
+            <div style={{ fontSize: "6rem", fontWeight: "900", color: "#f97316", lineHeight: 1 }}>404</div>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: "700", color: "#1f2937", margin: "1rem 0 0.5rem" }}>Page Not Found</h1>
+            <p style={{ color: "#6b7280", marginBottom: "2rem", maxWidth: "360px" }}>The page you're looking for doesn't exist or has been moved.</p>
+            <a href="/" style={{ background: "#f97316", color: "#fff", padding: "0.75rem 2rem", borderRadius: "0.75rem", fontWeight: "600", textDecoration: "none", fontSize: "0.95rem" }}>Go to Home</a>
+          </div>
+        } />
       </Routes>
     </Router>
   );

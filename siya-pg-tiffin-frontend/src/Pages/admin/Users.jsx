@@ -1,20 +1,35 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { FiEdit2, FiTrash2, FiUserX, FiUserCheck, FiUsers, FiSearch, FiShield, FiUser } from "react-icons/fi";
+import { 
+  FiUsers, FiSearch, FiUser, FiMail, FiPhone, FiCalendar, FiFilter, 
+  FiX, FiChevronLeft, FiChevronRight, FiUserPlus, FiRefreshCw, FiShield,
+  FiUserX, FiUserCheck, FiEye
+} from "react-icons/fi";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingUser, setEditingUser] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  
+  // Get current logged-in user
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = currentUser?.role === "admin";
+  
+  const [addForm, setAddForm] = useState({
     name: "",
     email: "",
-    role: "",
-    isBlocked: false
+    password: "",
+    role: "customer",
+    phone: "",
+    address: ""
   });
 
   useEffect(() => {
@@ -35,57 +50,57 @@ const Users = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await API.delete(`/admin/users/${id}`);
-        fetchUsers();
-      } catch (err) {
-        alert(err.response?.data?.message || "Failed to delete user");
-      }
-    }
-  };
-
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setEditForm({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isBlocked: user.isBlocked
-    });
-    setShowEditModal(true);
-  };
-
-  const handleUpdate = async (e) => {
+  const handleAddUser = async (e) => {
     e.preventDefault();
+    if (!isAdmin) return;
     try {
-      await API.put(`/admin/users/${editingUser._id}`, editForm);
-      setShowEditModal(false);
+      await API.post("/auth/register", addForm);
+      setShowAddModal(false);
       fetchUsers();
+      setAddForm({
+        name: "",
+        email: "",
+        password: "",
+        role: "customer",
+        phone: "",
+        address: ""
+      });
+      alert("User added successfully!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update user");
+      alert(err.response?.data?.message || "Failed to add user");
     }
   };
 
   const handleBlockToggle = async (user) => {
-    try {
-      await API.put(`/admin/users/${user._id}`, {
-        ...user,
-        isBlocked: !user.isBlocked
-      });
-      fetchUsers();
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update user");
+    if (!isAdmin) return;
+    const action = user.isBlocked ? "unblock" : "block";
+    if (window.confirm(`Are you sure you want to ${action} ${user.name}?`)) {
+      try {
+        await API.put(`/admin/users/${user._id}`, {
+          ...user,
+          isBlocked: !user.isBlocked
+        });
+        fetchUsers();
+        alert(`User ${action}ed successfully!`);
+      } catch (err) {
+        alert(err.response?.data?.message || `Failed to ${action} user`);
+      }
     }
+  };
+
+  const handleViewStats = (user) => {
+    setSelectedUser(user);
+    setShowStatsModal(true);
   };
 
   const filteredUsers = users
     .filter((user) => (roleFilter ? user.role === roleFilter : true))
+    .filter((user) => (statusFilter ? (statusFilter === "active" ? !user.isBlocked : user.isBlocked) : true))
     .filter((user) => 
       searchTerm ? 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.phone && user.phone.includes(searchTerm))
       : true
     );
 
@@ -93,25 +108,59 @@ const Users = () => {
     return name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
   };
 
+  const getRoleIcon = (role) => {
+    switch(role) {
+      case 'admin': return <FiShield className="text-indigo-500" />;
+      default: return <FiUser className="text-blue-500" />;
+    }
+  };
+
+  const getRoleBadgeClass = (role) => {
+    switch(role) {
+      case 'admin': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      case 'student': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      default: return 'bg-blue-50 text-blue-700 border-blue-200';
+    }
+  };
+
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <p className="mt-4 text-gray-500">Loading users...</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen pb-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3 text-gray-800">
-            <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-2 rounded-xl shadow-lg">
-              <FiUsers />
-            </span>
-            User Management
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">Manage all registered users, permissions, and account statuses.</p>
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3 text-gray-800">
+              <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-2 rounded-xl shadow-lg">
+                <FiUsers />
+              </span>
+              User Management
+            </h2>
+          </div>
+          
+          {/* Only Admin (Super Admin) can add users */}
+          {isAdmin && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2 text-sm font-medium shadow-lg shadow-orange-200"
+            >
+              <FiUserPlus /> Add New User
+            </button>
+          )}
         </div>
       </div>
 
@@ -122,44 +171,80 @@ const Users = () => {
       )}
 
       {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1 relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-lg focus:ring-2 focus:ring-orange-500 transition-all text-sm"
-          />
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by name, email or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-lg focus:ring-2 focus:ring-orange-500 transition-all text-sm"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <div className="relative">
+              <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="pl-9 pr-4 py-2 bg-gray-50 border-none rounded-lg focus:ring-2 focus:ring-orange-500 text-sm outline-none appearance-none"
+              >
+                <option value="">All Roles</option>
+                <option value="admin">Admins</option>
+                <option value="student">Students</option>
+                <option value="customer">Customers</option>
+              </select>
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 bg-gray-50 border-none rounded-lg focus:ring-2 focus:ring-orange-500 text-sm outline-none"
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="blocked">Blocked</option>
+            </select>
+            <button
+              onClick={() => {
+                setRoleFilter("");
+                setStatusFilter("");
+                setSearchTerm("");
+              }}
+              className="text-orange-500 hover:text-orange-600 text-sm flex items-center gap-1"
+            >
+              <FiRefreshCw /> Reset
+            </button>
+          </div>
         </div>
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="bg-gray-50 border-none rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm outline-none"
-        >
-          <option value="">All Roles</option>
-          <option value="admin">Admins</option>
-          <option value="student">Students</option>
-          <option value="customer">Customers</option>
-        </select>
       </div>
 
       {/* Users Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+            <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b border-gray-100">
               <tr>
                 <th className="px-6 py-4">User</th>
+                <th className="px-6 py-4">Contact</th>
                 <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Joined</th>
                 <th className="px-6 py-4 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
+              {currentUsers.length > 0 ? (
+                currentUsers.map((user) => (
                   <tr key={user._id} className="hover:bg-orange-50/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -168,17 +253,24 @@ const Users = () => {
                         </div>
                         <div>
                           <p className="font-semibold text-gray-800">{user.name}</p>
-                          <p className="text-gray-500 text-xs">{user.email}</p>
+                          <p className="text-gray-400 text-xs flex items-center gap-1">
+                            <FiMail className="text-[10px]" /> {user.email}
+                          </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                        user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' :
-                        user.role === 'student' ? 'bg-emerald-100 text-emerald-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {user.role === 'admin' ? <FiShield /> : <FiUser />}
+                      {user.phone ? (
+                        <div className="flex items-center gap-1 text-gray-600 text-sm">
+                          <FiPhone className="text-gray-400" /> {user.phone}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">No phone</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeClass(user.role)}`}>
+                        {getRoleIcon(user.role)}
                         {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </span>
                     </td>
@@ -190,33 +282,35 @@ const Users = () => {
                         {user.isBlocked ? 'Blocked' : 'Active'}
                       </span>
                     </td>
+                    <td className="px-6 py-4 text-gray-500 text-xs">
+                      <div className="flex items-center gap-1">
+                        <FiCalendar className="text-[10px]" />
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
+                        {/* View Details - Visible to everyone */}
                         <button
-                          onClick={() => handleEdit(user)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit User"
+                          onClick={() => handleViewStats(user)}
+                          className="p-2 text-gray-500 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                          title="View Details"
                         >
-                          <FiEdit2 />
+                          <FiEye />
                         </button>
-                        <button
-                          onClick={() => handleBlockToggle(user)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            user.isBlocked 
-                            ? 'text-emerald-600 hover:bg-emerald-50' 
-                            : 'text-amber-600 hover:bg-amber-50'
-                          }`}
-                          title={user.isBlocked ? "Unblock User" : "Block User"}
-                        >
-                          {user.isBlocked ? <FiUserCheck /> : <FiUserX />}
-                        </button>
-                        {user.role !== 'admin' && (
+                        
+                        {/* Block/Unblock - Only Super Admin */}
+                        {isAdmin && (
                           <button
-                            onClick={() => handleDelete(user._id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete User"
+                            onClick={() => handleBlockToggle(user)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              user.isBlocked 
+                                ? 'text-emerald-600 hover:bg-emerald-50' 
+                                : 'text-amber-600 hover:bg-amber-50'
+                            }`}
+                            title={user.isBlocked ? "Unblock User" : "Block User"}
                           >
-                            <FiTrash2 />
+                            {user.isBlocked ? <FiUserCheck /> : <FiUserX />}
                           </button>
                         )}
                       </div>
@@ -225,7 +319,7 @@ const Users = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-500">
                       <FiUsers className="text-4xl mb-3 text-gray-300" />
                       <p className="text-base font-medium text-gray-800">No users found</p>
@@ -237,85 +331,164 @@ const Users = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
+            <p className="text-sm text-gray-500">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredUsers.length)} of {filteredUsers.length} users
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiChevronLeft />
+              </button>
+              <span className="px-4 py-2 text-sm font-medium text-orange-600 bg-orange-50 rounded-lg">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiChevronRight />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Edit User Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 text-white">
+      {/* Add User Modal - Orange Theme, Only Admin Role Option */}
+      {showAddModal && isAdmin && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-5 text-white">
               <h3 className="text-xl font-bold flex items-center gap-2">
-                <FiEdit2 /> Edit User Profile
+                <FiUserPlus /> Add New User
               </h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="absolute top-5 right-5 text-white hover:text-orange-200"
+              >
+                <FiX />
+              </button>
             </div>
-            <form onSubmit={handleUpdate} className="p-6 space-y-5">
+            <form onSubmit={handleAddUser} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                 <input
                   type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                  className="w-full border-gray-300 rounded-lg px-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none"
+                  value={addForm.name}
+                  onChange={(e) => setAddForm({...addForm, name: e.target.value})}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                   required
                 />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                 <input
                   type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                  className="w-full border-gray-300 rounded-lg px-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none"
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({...addForm, email: e.target.value})}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">User Role</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                <input
+                  type="password"
+                  value={addForm.password}
+                  onChange={(e) => setAddForm({...addForm, password: e.target.value})}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  required
+                />
+                <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                 <select
-                  value={editForm.role}
-                  onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-                  className="w-full border-gray-300 rounded-lg px-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none"
+                  value={addForm.role}
+                  onChange={(e) => setAddForm({...addForm, role: e.target.value})}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                 >
-                  <option value="customer">Customer</option>
-                  <option value="student">Student</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <div>
-                  <p className="font-semibold text-gray-800 text-sm">Account Status</p>
-                  <p className="text-xs text-gray-500">Block to prevent user login</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={editForm.isBlocked}
-                    onChange={(e) => setEditForm({...editForm, isBlocked: e.target.checked})}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                </label>
-              </div>
-
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl font-medium hover:bg-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-orange-500 text-white px-4 py-2.5 rounded-xl font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+                  className="flex-1 bg-orange-500 text-white px-4 py-2.5 rounded-xl font-medium hover:bg-orange-600"
                 >
-                  Save Changes
+                  Create User
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Details Modal - Orange Theme */}
+      {showStatsModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-5 text-white">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <FiUsers /> User Details
+              </h3>
+              <button
+                onClick={() => setShowStatsModal(false)}
+                className="absolute top-5 right-5 text-white hover:text-orange-200"
+              >
+                <FiX />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                  {getInitials(selectedUser.name)}
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-gray-800">{selectedUser.name}</h4>
+                  <p className="text-gray-500">{selectedUser.email}</p>
+                  {selectedUser.phone && <p className="text-gray-500 text-sm">{selectedUser.phone}</p>}
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500">Role</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleBadgeClass(selectedUser.role)}`}>
+                    {selectedUser.role}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500">Status</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${selectedUser.isBlocked ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                    {selectedUser.isBlocked ? 'Blocked' : 'Active'}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-500">Joined</span>
+                  <span className="text-gray-700">{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
+                </div>
+                {selectedUser.address && (
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-500">Address</span>
+                    <span className="text-gray-700 text-right">{selectedUser.address}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

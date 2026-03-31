@@ -33,9 +33,9 @@ const GenerateBills = () => {
   const printRef = useRef(null);
 
   const presetOptions = [
-    { value: "30", label: "Last 30 Days", icon: "📅", desc: "1 Month" },
-    { value: "60", label: "Last 60 Days", icon: "📆", desc: "2 Months" },
-    { value: "90", label: "Last 90 Days", icon: "🗓️", desc: "3 Months" },
+    { value: "30", label: "Last 30 Days", icon: <FiCalendar className="text-orange-500" />, desc: "1 Month" },
+    { value: "60", label: "Last 60 Days", icon: <FiCalendar className="text-orange-500" />, desc: "2 Months" },
+    { value: "90", label: "Last 90 Days", icon: <FiCalendar className="text-orange-500" />, desc: "3 Months" },
   ];
 
   const handlePresetSelect = (value) => {
@@ -143,7 +143,7 @@ const GenerateBills = () => {
       </head>
       <body>
         <div class="header">
-          <h1>🍱 SwadBox - Bill Report</h1>
+          <h1>📦 SwadBox - Bill Report</h1>
           <p>Generated on ${new Date().toLocaleDateString("en-IN", { dateStyle: "full" })}</p>
           <p>Period: ${report?.dateRange?.label} (${new Date(report?.dateRange?.start).toLocaleDateString("en-IN")} – ${new Date(report?.dateRange?.end).toLocaleDateString("en-IN")})</p>
         </div>
@@ -851,12 +851,12 @@ const GenerateBills = () => {
           </p>
           <div className="flex justify-center gap-8 mt-8">
             {[
-              { icon: "📊", text: "Bill Summary" },
-              { icon: "📋", text: "Transaction List" },
-              { icon: "👥", text: "Customer Breakdown" },
+              { icon: <FiTrendingUp className="text-3xl" />, text: "Bill Summary" },
+              { icon: <FiFileText className="text-3xl" />, text: "Transaction List" },
+              { icon: <FiUsers className="text-3xl" />, text: "Customer Breakdown" },
             ].map((item, idx) => (
               <div key={idx} className="text-center">
-                <div className="text-3xl mb-2">{item.icon}</div>
+                <div className="text-3xl mb-2 text-orange-500">{item.icon}</div>
                 <p className="text-xs text-gray-400">{item.text}</p>
               </div>
             ))}

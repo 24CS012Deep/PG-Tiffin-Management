@@ -6,14 +6,17 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+  const isAuthenticated = user && token;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
+    window.location.reload(); // Force full reload to clear all states
   };
 
-  const navLink = "group relative text-gray-700 hover:text-orange-500 transition";
+  const navLink = "group relative text-gray-700 font-semibold hover:text-orange-500 transition";
 
   return (
     <>
@@ -35,28 +38,26 @@ export default function Navbar() {
               <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
-            {user ? (
+            {isAuthenticated ? (
               <>
                 {/* DASHBOARD (when logged in) */}
-                <Link to={`/${user.role}`} className={navLink}>
+                <Link to={`/${user.role === "admin" ? "admin" : user.role === "student" ? "student" : "customer"}`} className={navLink}>
                   Dashboard
                   <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+                  className="bg-orange-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-600 transition shadow-lg shadow-orange-200"
                 >
                   Logout
                 </button>
               </>
             ) : (
-              <>
-                {/* SIGN UP */}
-                <Link to="/signup" className={navLink}>
-                  Sign Up
-                  <span className="absolute left-0 bottom-[-5px] h-[2px] bg-orange-500 w-0 transition-all duration-300 group-hover:w-full"></span>
+              <div className="flex items-center">
+                <Link to="/signin" className="bg-orange-500 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-orange-600 transition shadow-[0_4px_15px_rgba(249,115,22,0.3)] hover:-translate-y-0.5">
+                  Sign In
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
@@ -79,18 +80,19 @@ export default function Navbar() {
           <nav className="flex flex-col gap-6 text-lg font-medium text-gray-700">
             <Link to="/" onClick={() => setOpen(false)}>Home</Link>
             <Link to="/contact" onClick={() => setOpen(false)}>Contact Us</Link>
-            
-            {user ? (
+            {isAuthenticated ? (
               <>
-                <Link to={`/${user.role}`} onClick={() => setOpen(false)}>Dashboard</Link>
-                <button onClick={handleLogout} className="text-left text-red-500">Logout</button>
+                <Link to={`/${user.role === "admin" ? "admin" : user.role === "student" ? "student" : "customer"}`} onClick={() => setOpen(false)} className="text-gray-700 hover:text-orange-500 font-semibold">Dashboard</Link>
+                <button onClick={handleLogout} className="text-left text-red-500 font-bold hover:text-red-600 mt-2">Logout</button>
               </>
             ) : (
-              <Link to="/signup" onClick={() => setOpen(false)}>Sign Up</Link>
+              <div className="pt-4 border-t border-gray-100">
+                <Link to="/signin" onClick={() => setOpen(false)} className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg block text-center mt-2">Sign In</Link>
+              </div>
             )}
           </nav>
 
-          <div className="mt-auto text-sm text-gray-400">© 2026 SwadBox</div>
+          <div className="mt-auto text-sm text-gray-400 text-center font-medium">© 2026 SwadBox</div>
         </div>
       </aside>
     </>

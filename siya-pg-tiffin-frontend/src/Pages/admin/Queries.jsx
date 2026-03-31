@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { FiCheckCircle, FiTrash2, FiMessageSquare, FiAlertCircle, FiClock, FiSearch } from "react-icons/fi";
+import { FiCheckCircle, FiTrash2, FiMessageSquare, FiClock, FiSearch, FiX } from "react-icons/fi";
+import { MdOutlineSupportAgent } from "react-icons/md";
 
 const Queries = () => {
   const [queries, setQueries] = useState([]);
@@ -111,7 +112,7 @@ const Queries = () => {
         <div>
           <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3 text-gray-800">
             <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-2 rounded-xl shadow-lg">
-              <FiMessageSquare />
+              <MdOutlineSupportAgent />
             </span>
             Support Tickets
           </h2>
@@ -238,8 +239,15 @@ const Queries = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-5 text-white flex justify-between items-center">
               <h3 className="text-xl font-bold flex items-center gap-2">
-                <FiMessageSquare /> Reply to Ticket
+                <MdOutlineSupportAgent /> Reply to Ticket
               </h3>
+              <button
+                type="button"
+                onClick={() => { setShowAnswerModal(false); setAnswer(""); }}
+                className="text-white/70 hover:text-white hover:bg-white/20 p-1.5 rounded-lg transition-all"
+              >
+                <FiX size={20} />
+              </button>
             </div>
             
             <form onSubmit={handleAnswer} className="flex flex-col flex-1 min-h-0">
@@ -247,7 +255,7 @@ const Queries = () => {
                 <div className="mb-6 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="font-semibold text-gray-800">{selectedQuery?.user?.name}</span>
-                    <span className="text-gray-400 text-xs text-xs">{new Date(selectedQuery?.createdAt).toLocaleString()}</span>
+                    <span className="text-gray-400 text-xs">{new Date(selectedQuery?.createdAt).toLocaleString()}</span>
                   </div>
                   <p className="text-gray-700 text-sm leading-relaxed">
                     "{selectedQuery?.question}"

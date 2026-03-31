@@ -43,28 +43,15 @@ const Rooms = () => {
     rent: 5000,
     floor: 1,
     details: "",
-    amenities: [],
     bedType: "single", // single, double, triple
-    roomType: "non-ac", // ac, non-ac
-    furnished: "semi", // fully, semi, unfurnished
-    attachedBathroom: true,
+    roomType: "non-ac",
     balcony: false,
   });
 
-  const amenityOptions = ["AC", "Attached Bathroom", "Study Table", "Wardrobe", "Geyser", "WiFi"];
   const bedTypeOptions = [
     { value: "single", label: "Single Bed", icon: faBed },
     { value: "double", label: "Double Bed", icon: faBed },
     { value: "triple", label: "Triple Bed", icon: faBed },
-  ];
-  const roomTypeOptions = [
-    { value: "ac", label: "AC Room", icon: faSnowflake },
-    { value: "non-ac", label: "Non-AC Room", icon: faWind },
-  ];
-  const furnishedOptions = [
-    { value: "fully", label: "Fully Furnished", icon: faStarFull },
-    { value: "semi", label: "Semi Furnished", icon: faStarHalfAlt },
-    { value: "unfurnished", label: "Unfurnished", icon: faStar },
   ];
 
   useEffect(() => {
@@ -150,17 +137,35 @@ const Rooms = () => {
       alert("Please select a student");
       return;
     }
+    if (!selectedRoom || !selectedRoom._id) {
+      alert("Room information missing. Please try again.");
+      return;
+    }
     try {
-      await API.post("/admin/rooms/assign", {
+      const payload = {
         roomId: selectedRoom._id,
         studentId: selectedStudent
-      });
+      };
+      console.log("Assigning student with payload:", payload);
+      console.log("Room capacity:", selectedRoom.capacity, "Current occupancy:", selectedRoom.students?.length || 0);
+      
+      const response = await API.post("/admin/rooms/assign", payload);
+      console.log("Assignment successful:", response.data);
+      
       setShowAssignModal(false);
       setSelectedStudent("");
       fetchRooms();
       fetchStudents();
+      alert("Student assigned successfully!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to assign student");
+      console.error("Assignment error:", err);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to assign student";
+      console.log("Error details:", {
+        status: err.response?.status,
+        message: errorMessage,
+        data: err.response?.data
+      });
+      alert(errorMessage);
     }
   };
 
@@ -253,9 +258,9 @@ const Rooms = () => {
   // Helper function to get occupancy status color
   const getOccupancyColor = (occupied, capacity) => {
     const percentage = (occupied / capacity) * 100;
-    if (percentage === 0) return 'text-green-600 bg-green-100';
-    if (percentage < 100) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
+    if (percentage === 0) return 'text-orange-600 bg-orange-100';
+    if (percentage < 100) return 'text-amber-600 bg-amber-100';
+    return 'text-red-500 bg-red-100';
   };
 
   // Helper function to get room type badge
@@ -275,14 +280,22 @@ const Rooms = () => {
 
   return (
     <div className="px-2 sm:px-0">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold">PG Rooms Management</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+        <div>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-3 text-gray-800">
+            <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-2 rounded-xl shadow-lg">
+              <FiHome />
+            </span>
+            PG Rooms Management
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">Manage rooms, assign students, and track occupancy.</p>
+        </div>
         <button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="bg-orange-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
+          className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2.5 rounded-lg hover:from-orange-600 hover:to-orange-700 transition flex items-center gap-2 text-sm font-medium shadow-lg shadow-orange-200"
         >
           <FiHome /> Add New Room
         </button>
@@ -303,8 +316,8 @@ const Rooms = () => {
             <div key={room._id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden">
               {/* Room Header with Color Coding based on occupancy */}
               <div className={`h-2 ${
-                occupiedCount === 0 ? 'bg-green-500' :
-                occupiedCount < room.capacity ? 'bg-yellow-500' : 'bg-red-500'
+                occupiedCount === 0 ? 'bg-orange-500' :
+                occupiedCount < room.capacity ? 'bg-amber-500' : 'bg-red-500'
               }`}></div>
               
               <div className="p-4 sm:p-6">
@@ -320,7 +333,7 @@ const Rooms = () => {
                   <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                     <button
                       onClick={() => openEditModal(room)}
-                      className="text-blue-500 hover:text-blue-600 p-1.5 sm:p-2 hover:bg-blue-50 rounded-lg transition text-sm sm:text-base"
+                      className="text-orange-500 hover:text-orange-600 p-1.5 sm:p-2 hover:bg-orange-50 rounded-lg transition text-sm sm:text-base"
                       title="Edit Room"
                     >
                       <FiEdit2 />
@@ -336,29 +349,15 @@ const Rooms = () => {
                 </div>
 
                 {/* Room Type and Bed Type Badges */}
-                <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getRoomTypeBadge(room.roomType)}`}>
-                    <FontAwesomeIcon icon={room.roomType === 'ac' ? faSnowflake : faWind} className="text-xs" />
-                    {room.roomType === 'ac' ? 'AC' : 'Non-AC'}
+                <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
+                  <span className="bg-orange-50 text-orange-700 border border-orange-100 px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <FontAwesomeIcon icon={faWind} className="text-xs text-orange-500" /> 
+                    Non-AC
                   </span>
-                  <span className="bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                  <span className="bg-amber-50 text-amber-700 border border-amber-100 px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                     {getBedTypeIcon(room.bedType)} 
                     <span className="hidden sm:inline">{room.bedType?.charAt(0).toUpperCase() + room.bedType?.slice(1)} Bed</span>
                     <span className="sm:hidden">{room.bedType?.charAt(0).toUpperCase()}</span>
-                  </span>
-                  <span className="bg-indigo-100 text-indigo-700 px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                    <FontAwesomeIcon icon={
-                      room.furnished === 'fully' ? faStarFull :
-                      room.furnished === 'semi' ? faStarHalfAlt : faStar
-                    } className="text-xs" />
-                    <span className="hidden sm:inline">
-                      {room.furnished === 'fully' ? 'Fully' :
-                       room.furnished === 'semi' ? 'Semi' : 'Un'} Furnished
-                    </span>
-                    <span className="sm:hidden">
-                      {room.furnished === 'fully' ? 'F' :
-                       room.furnished === 'semi' ? 'S' : 'U'}
-                    </span>
                   </span>
                 </div>
 
@@ -391,55 +390,34 @@ const Rooms = () => {
                       {occupiedCount}/{room.capacity}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-orange-100 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full ${
-                        occupiedCount === 0 ? 'bg-green-500' :
-                        occupiedCount < room.capacity ? 'bg-yellow-500' : 'bg-red-500'
+                        occupiedCount === 0 ? 'bg-orange-500' :
+                        occupiedCount < room.capacity ? 'bg-amber-500' : 'bg-red-500'
                       }`}
                       style={{ width: `${(occupiedCount / room.capacity) * 100}%` }}
                     ></div>
                   </div>
                 </div>
 
-                {/* Amenities */}
-                {room.amenities?.length > 0 && (
-                  <div className="mb-3 sm:mb-4">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">Amenities:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {room.amenities.map((a, i) => (
-                        <span key={i} className="bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full border border-orange-200 flex items-center gap-1">
-                          <FontAwesomeIcon icon={getAmenityIcon(a)} className="text-xs" />
-                          <span className="hidden sm:inline">{a}</span>
-                          <span className="sm:hidden">{a.substring(0, 3)}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Additional Features */}
                 <div className="flex flex-wrap gap-2 mb-3 sm:mb-4 text-xs sm:text-sm">
-                  {room.attachedBathroom && (
-                    <span className="text-green-600 flex items-center gap-1 whitespace-nowrap">
-                      <FontAwesomeIcon icon={faCheckCircle} /> Bath
-                    </span>
-                  )}
                   {room.balcony && (
-                    <span className="text-green-600 flex items-center gap-1 whitespace-nowrap">
+                    <span className="text-orange-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-100 flex items-center gap-1 whitespace-nowrap">
                       <FontAwesomeIcon icon={faCheckCircle} /> Balcony
                     </span>
                   )}
                 </div>
 
                 {/* Students List */}
-                <div className="border-t pt-3 sm:pt-4">
-                  <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                    <FontAwesomeIcon icon={faUserGraduate} className="text-xs" /> Current Students:
+                <div className="border-t border-orange-100 pt-3 sm:pt-4">
+                  <p className="text-xs sm:text-sm font-bold text-gray-800 mb-2 flex items-center gap-1">
+                    <FontAwesomeIcon icon={faUserGraduate} className="text-orange-500 text-xs" /> Current Students:
                   </p>
                   <ul className="space-y-1 sm:space-y-2 max-h-32 sm:max-h-48 overflow-y-auto">
                     {room.students?.length === 0 ? (
-                      <li className="text-green-600 text-xs sm:text-sm bg-green-50 p-2 rounded-lg text-center flex items-center justify-center gap-1">
+                      <li className="text-orange-600 text-xs sm:text-sm bg-orange-50 border border-orange-100 p-2 rounded-lg text-center flex items-center justify-center gap-1 font-medium">
                         <FontAwesomeIcon icon={faDoorOpen} /> Available
                       </li>
                     ) : (
@@ -472,7 +450,7 @@ const Rooms = () => {
                 {room.students?.length < room.capacity && (
                   <button
                     onClick={() => openAssignModal(room)}
-                    className="mt-3 sm:mt-4 w-full bg-green-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 text-xs sm:text-sm font-medium"
+                    className="mt-3 sm:mt-4 w-full border border-orange-500 text-orange-500 bg-white px-3 sm:px-4 py-2 rounded-lg hover:bg-orange-50 transition flex items-center justify-center gap-2 text-xs sm:text-sm font-bold"
                   >
                     <FiUserPlus /> Assign Student
                   </button>
@@ -561,11 +539,7 @@ const Rooms = () => {
                     onChange={handleInputChange}
                     className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                   >
-                    {roomTypeOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                    <option value="non-ac">Non-AC Room (Standard)</option>
                   </select>
                 </div>
 
@@ -586,38 +560,9 @@ const Rooms = () => {
                   </select>
                 </div>
 
-                {/* Furnished Status */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Furnished Status *</label>
-                  <select
-                    name="furnished"
-                    value={formData.furnished}
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
-                  >
-                    {furnishedOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Checkboxes */}
                 <div className="md:col-span-2">
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="attachedBathroom"
-                        checked={formData.attachedBathroom}
-                        onChange={handleInputChange}
-                        className="rounded text-orange-500 focus:ring-orange-500 w-4 h-4"
-                      />
-                      <span className="text-xs sm:text-sm flex items-center gap-1">
-                        <FontAwesomeIcon icon={faToilet} className="text-xs" /> Attached Bathroom
-                      </span>
-                    </label>
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -630,28 +575,6 @@ const Rooms = () => {
                         <FontAwesomeIcon icon={faTree} className="text-xs" /> Balcony
                       </span>
                     </label>
-                  </div>
-                </div>
-
-                {/* Amenities */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Amenities</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                    {amenityOptions.map(amenity => (
-                      <label key={amenity} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-orange-50">
-                        <input
-                          type="checkbox"
-                          checked={formData.amenities.includes(amenity)}
-                          onChange={() => handleAmenityChange(amenity)}
-                          className="rounded text-orange-500 focus:ring-orange-500 w-4 h-4"
-                        />
-                        <span className="text-xs sm:text-sm flex items-center gap-1">
-                          <FontAwesomeIcon icon={getAmenityIcon(amenity)} className="text-xs" />
-                          <span className="hidden sm:inline">{amenity}</span>
-                          <span className="sm:hidden">{amenity.substring(0, 3)}</span>
-                        </span>
-                      </label>
-                    ))}
                   </div>
                 </div>
 
@@ -695,19 +618,22 @@ const Rooms = () => {
       {/* Assign Student Modal - Enhanced */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-xl max-w-md w-full">
-            <h3 className="text-lg sm:text-2xl font-bold mb-2 sm:mb-4 text-green-600 flex items-center gap-2">
-              <FontAwesomeIcon icon={faUserGraduate} /> Assign Student
+          <div className="bg-white p-4 sm:p-6 rounded-xl max-w-md w-full border-t-8 border-orange-500">
+            <h3 className="text-lg sm:text-2xl font-bold mb-2 sm:mb-4 text-gray-900 flex items-center gap-2">
+              <span className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FontAwesomeIcon icon={faUserGraduate} className="text-orange-500" /> 
+              </span>
+              Assign Student
             </h3>
             <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 flex items-center gap-1">
-              <FontAwesomeIcon icon={faDoorOpen} className="text-xs" />
+              <FontAwesomeIcon icon={faDoorOpen} className="text-orange-500 text-xs" />
               Assign to Room <span className="font-bold text-orange-500 mx-1">{selectedRoom?.roomNumber}</span>
             </p>
             <div className="space-y-3 sm:space-y-4">
               <select
                 value={selectedStudent}
                 onChange={(e) => setSelectedStudent(e.target.value)}
-                className="w-full border rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:ring-2 focus:ring-green-500 text-sm"
+                className="w-full border rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:ring-2 focus:ring-orange-500 text-sm font-medium"
               >
                 <option value="">Select a student</option>
                 {students
@@ -722,7 +648,7 @@ const Rooms = () => {
               <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={handleAssignStudent}
-                  className="bg-green-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-600 flex-1 font-medium flex items-center justify-center gap-2 text-xs sm:text-sm"
+                  className="bg-orange-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-orange-600 flex-1 font-bold flex items-center justify-center gap-2 text-xs sm:text-sm"
                 >
                   <FiUserPlus /> Assign
                 </button>

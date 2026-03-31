@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
 import { FiDollarSign, FiDownload, FiCheckCircle, FiClock, FiAlertCircle, FiFileText } from "react-icons/fi";
+import { MdReceiptLong } from "react-icons/md";
 
 const RoomBills = () => {
   const [bills, setBills] = useState([]);
@@ -84,7 +85,7 @@ Thank you for choosing SwadBox Premium Living!
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold flex items-center gap-4 text-gray-800 tracking-tight">
             <span className="bg-gradient-to-r from-orange-400 to-amber-500 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
-               <FiFileText />
+               <MdReceiptLong />
             </span>
             My Invoices
           </h1>
@@ -101,7 +102,7 @@ Thank you for choosing SwadBox Premium Living!
       {bills.length === 0 ? (
         <div className="bg-white rounded-3xl shadow-sm border border-dashed border-gray-300 p-16 text-center mt-10">
           <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-             <FiDollarSign className="text-5xl text-gray-300" />
+             <MdReceiptLong className="text-5xl text-gray-300" />
              <div className="w-8 h-8 bg-green-100 text-green-500 rounded-full border-2 border-white absolute bottom-0 right-2 flex items-center justify-center shadow-sm">
                 <FiCheckCircle className="text-sm" />
              </div>

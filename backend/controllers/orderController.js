@@ -32,6 +32,24 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "This plan has reached maximum capacity" });
     }
 
+    // Check Date and Cut-Off Time constraints
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (plan.targetDate && plan.targetDate < todayStr) {
+      return res.status(400).json({ message: "This plan has expired and is no longer available." });
+    }
+
+    if (plan.targetDate === todayStr && plan.cutOffTime) {
+      const now = new Date();
+      // Format current time as HH:MM
+      const currentHours = now.getHours().toString().padStart(2, '0');
+      const currentMinutes = now.getMinutes().toString().padStart(2, '0');
+      const currentTimeStr = `${currentHours}:${currentMinutes}`;
+      
+      if (currentTimeStr > plan.cutOffTime) {
+        return res.status(400).json({ message: `Ordering for this plan closed at ${plan.cutOffTime}.` });
+      }
+    }
+
     // Calculate total amount
     const totalAmount = plan.price * (quantity || 1);
 

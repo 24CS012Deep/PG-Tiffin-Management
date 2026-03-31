@@ -4,7 +4,9 @@ import Order from "../models/Order.js";
 /* ================= CREATE TIFFIN PLAN ================= */
 export const createTiffinPlan = async (req, res) => {
   try {
-    const { name, price, description, photo, maxCustomers, type, mealTypes } = req.body;
+    const { name, price, description, photo, maxCustomers, type, mealTypes, targetDate, cutOffTime } = req.body;
+
+    console.log("📝 Creating tiffin plan with:", { name, price, type, mealTypes, targetDate, cutOffTime });
 
     const plan = await TiffinPlan.create({
       name,
@@ -15,37 +17,63 @@ export const createTiffinPlan = async (req, res) => {
       currentCustomers: 0,
       type: type || "veg",
       mealTypes: mealTypes || ["lunch", "dinner"],
+      targetDate: targetDate || "",
+      cutOffTime: cutOffTime || "",
       createdBy: req.user.id,
       isActive: true,
       menu: []
     });
 
+    console.log("✅ Plan created successfully:", plan._id);
     res.status(201).json(plan);
   } catch (error) {
-    console.error("Create plan error:", error);
-    res.status(500).json({ message: "Failed to create plan" });
+    console.error("❌ Create plan error:", error);
+    res.status(500).json({ message: "Failed to create plan", error: error.message });
   }
 };
 
 /* ================= GET ALL TIFFIN PLANS ================= */
-// This function should already exist
 export const getTiffinPlans = async (req, res) => {
   try {
-    const plans = await TiffinPlan.find({ isActive: true }).populate("createdBy", "name").sort("-createdAt");
-    res.json(plans);
+    console.log("📋 Fetching tiffin plans...");
+    
+    const plans = await TiffinPlan.find()
+      .populate("createdBy", "name")
+      .lean()
+      .sort("-createdAt");
+    
+    console.log(`✅ Found ${plans.length} tiffin plans`);
+    
+    if (plans.length === 0) {
+      console.log("⚠️  No tiffin plans found in database");
+    }
+    
+    // Ensure all plans have the required fields
+    const processedPlans = plans.map(plan => ({
+      ...plan,
+      isActive: plan.isActive !== false,
+      currentCustomers: plan.currentCustomers || 0,
+      maxCustomers: plan.maxCustomers || 50,
+      type: plan.type || "veg",
+      mealTypes: plan.mealTypes || ["lunch", "dinner"],
+      menu: plan.menu || []
+    }));
+    
+    res.json(processedPlans);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch plans" });
+    console.error("❌ Get plans error:", error);
+    res.status(500).json({ message: "Failed to fetch plans", error: error.message });
   }
 };
 
 /* ================= UPDATE TIFFIN PLAN ================= */
 export const updateTiffinPlan = async (req, res) => {
   try {
-    const { name, price, description, photo, maxCustomers, type, mealTypes, isActive } = req.body;
+    const { name, price, description, photo, maxCustomers, type, mealTypes, isActive, targetDate, cutOffTime } = req.body;
     
     const plan = await TiffinPlan.findByIdAndUpdate(
       req.params.id,
-      { name, price, description, photo, maxCustomers, type, mealTypes, isActive },
+      { name, price, description, photo, maxCustomers, type, mealTypes, isActive, targetDate, cutOffTime },
       { new: true }
     );
 
@@ -74,26 +102,29 @@ export const deleteTiffinPlan = async (req, res) => {
   }
 };
 
-/* ================= SET TODAY'S MENU ================= */
+/* ================= SET MENU FOR DATE ================= */
 export const setTodaysMenu = async (req, res) => {
   try {
-    const { planId, items } = req.body;
-    const today = new Date().toISOString().split('T')[0];
+    const { planId, items, date } = req.body;
+    
+    // Provide a fallback to today in local timezone format if not provided
+    const targetDate = date || new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     
     const plan = await TiffinPlan.findById(planId);
     if (!plan) return res.status(404).json({ message: "Plan not found" });
 
-    const existingMenuIndex = plan.menu.findIndex(m => m.date === today);
+    const existingMenuIndex = plan.menu.findIndex(m => m.date === targetDate);
     if (existingMenuIndex >= 0) {
       plan.menu[existingMenuIndex].items = items;
     } else {
-      plan.menu.push({ date: today, items });
+      plan.menu.push({ date: targetDate, items });
     }
     
     await plan.save();
 
-    res.json({ success: true, plan });
+    res.json({ success: true, plan, date: targetDate, items });
   } catch (error) {
+    console.error("Set menu error:", error);
     res.status(500).json({ message: "Failed to set menu" });
   }
 };

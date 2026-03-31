@@ -40,8 +40,8 @@ export const updateStudentProfile = async (req, res) => {
 
     // Update basic fields
     if (name) user.name = name;
-    if (phone) user.phone = phone;
-    if (address) user.address = address;
+    if (phone !== undefined) user.phone = phone;
+    if (address !== undefined) user.address = address;
 
     // If password change requested
     if (newPassword) {

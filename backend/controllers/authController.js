@@ -263,6 +263,46 @@ export const registerUser = async (req, res) => {
     console.log("✅ User saved successfully! ID:", savedUser._id);
     console.log("Password was hashed:", savedUser.password !== password);
 
+    // Send welcome email to new user
+    try {
+      await sendEmail({
+        to: savedUser.email,
+        subject: "Welcome to Siya PG!",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #f97316, #ea580c); padding: 30px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">🏠 Welcome to Siya PG!</h1>
+              <p style="color: #fed7aa; margin: 8px 0 0 0; font-size: 14px;">Your account has been created</p>
+            </div>
+            <div style="padding: 25px;">
+              <p style="font-size: 16px;">Hello <strong>${savedUser.name}</strong>,</p>
+              <p style="color: #6b7280;">Your account has been successfully created on the Siya PG Management System. Here are your account details:</p>
+              
+              <div style="background-color: #fdf8f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
+                <h3 style="color: #f97316; margin-top: 0;">Account Details</h3>
+                <p><strong>Name:</strong> ${savedUser.name}</p>
+                <p><strong>Email:</strong> ${savedUser.email}</p>
+                <p><strong>Role:</strong> ${savedUser.role}</p>
+                <p><strong>Password:</strong> The password you were provided by admin</p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/signin" style="background-color: #f97316; color: white; padding: 14px 35px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">Sign In Now</a>
+              </div>
+              
+              <p style="color: #6b7280; font-size: 13px;">We recommend changing your password after first login from the Settings page.</p>
+            </div>
+            <div style="background-color: #f9fafb; padding: 15px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">Siya PG Management System</p>
+            </div>
+          </div>
+        `
+      });
+      console.log("✅ Welcome email sent to:", savedUser.email);
+    } catch (emailError) {
+      console.log("⚠️ Welcome email failed:", emailError.message);
+    }
+
     // Return success
     res.status(201).json({ 
       success: true, 

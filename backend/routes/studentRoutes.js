@@ -3,7 +3,7 @@ import { protect, studentOnly } from "../middleware/authMiddleware.js";
 import { getStudentProfile, updateStudentProfile } from "../controllers/studentController.js";
 import { getUserBillings } from "../controllers/billingController.js";  // ✅ Now exported
 import { createQuery, getUserQueries } from "../controllers/queryController.js";
-import { getAllRooms } from "../controllers/roomController.js";
+import { getAllRooms, getStudentRoom } from "../controllers/roomController.js";
 import { getTiffinPlans } from "../controllers/tiffinController.js";
 
 const router = express.Router();
@@ -15,6 +15,7 @@ router.put("/profile", updateStudentProfile);
 router.get("/dashboard", (req, res) => {
   res.json({ message: "Student Dashboard" });
 });
+router.get("/my-room", getStudentRoom);
 router.get("/rooms", getAllRooms);
 router.get("/billings", getUserBillings);
 router.get("/tiffin-plans", getTiffinPlans);

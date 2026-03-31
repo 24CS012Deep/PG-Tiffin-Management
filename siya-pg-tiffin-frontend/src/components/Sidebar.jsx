@@ -2,9 +2,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { 
   FiHome, FiUsers, FiBox, FiShoppingBag, 
-  FiDollarSign, FiBarChart2, FiSettings, FiLogOut,
-  FiMessageSquare, FiMenu, FiX, FiFileText
+  FiLogOut, FiMenu, FiX
 } from "react-icons/fi";
+import { MdReceiptLong, MdOutlineRequestQuote, MdOutlineSupportAgent } from "react-icons/md";
+import { TbReportAnalytics } from "react-icons/tb";
+import { RiSettings4Line } from "react-icons/ri";
 
 const Sidebar = ({ isOpen = true, onClose = () => {} }) => {
   const location = useLocation();
@@ -17,11 +19,11 @@ const Sidebar = ({ isOpen = true, onClose = () => {} }) => {
     { name: "Users", path: "/admin/users", icon: FiUsers },
     { name: "Tiffin Plans", path: "/admin/tiffin", icon: FiBox },
     { name: "Orders", path: "/admin/orders", icon: FiShoppingBag },
-    { name: "Billing", path: "/admin/billing", icon: FiDollarSign },
-    { name: "Generate Bills", path: "/admin/generate-bills", icon: FiFileText },
-    { name: "Reports", path: "/admin/reports", icon: FiBarChart2 },
-    { name: "Queries", path: "/admin/queries", icon: FiMessageSquare },
-    { name: "Settings", path: "/admin/settings", icon: FiSettings },
+    { name: "Billing", path: "/admin/billing", icon: MdReceiptLong },
+    { name: "Generate Bills", path: "/admin/generate-bills", icon: MdOutlineRequestQuote },
+    { name: "Reports", path: "/admin/reports", icon: TbReportAnalytics },
+    { name: "Queries", path: "/admin/queries", icon: MdOutlineSupportAgent },
+    { name: "Settings", path: "/admin/settings", icon: RiSettings4Line },
   ];
 
   const logout = () => {

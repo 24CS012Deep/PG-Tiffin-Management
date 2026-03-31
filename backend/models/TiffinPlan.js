@@ -38,6 +38,12 @@ const tiffinPlanSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  targetDate: {
+    type: String, // YYYY-MM-DD
+  },
+  cutOffTime: {
+    type: String, // HH:MM (e.g., "10:00")
+  },
   type: {
     type: String,
     enum: ["veg", "non-veg", "both"],

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
 import { FiHome, FiDollarSign, FiMessageSquare, FiCalendar, FiArrowRight, FiClock } from "react-icons/fi";
+import { MdWavingHand, MdReceiptLong, MdOutlineSupportAgent } from "react-icons/md";
 import { Link } from "react-router-dom";
 
 const StudentDashboard = () => {
@@ -85,8 +86,8 @@ const StudentDashboard = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3 text-gray-800">
-             <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-2 rounded-xl shadow-lg">
-               👋
+             <span className="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-2.5 rounded-xl shadow-lg flex items-center justify-center">
+               <MdWavingHand className="text-xl" />
              </span>
              Welcome back, {user?.name?.split(' ')[0] || 'Student'}!
           </h1>
@@ -142,7 +143,7 @@ const StudentDashboard = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
           <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-            <FiDollarSign />
+            <MdReceiptLong />
           </div>
           <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Total Bills</p>
           <p className="text-3xl font-bold text-gray-800 mt-1">{stats.totalBills}</p>
@@ -151,7 +152,7 @@ const StudentDashboard = () => {
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 hover:shadow-md transition-all group relative overflow-hidden">
           {stats.pendingBills > 0 && <div className="absolute top-0 right-0 w-2 h-full bg-red-500"></div>}
           <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-            <FiDollarSign />
+            <MdReceiptLong />
           </div>
           <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Pending Due</p>
           <p className="text-3xl font-bold text-gray-800 mt-1">{stats.pendingBills}</p>
@@ -159,7 +160,7 @@ const StudentDashboard = () => {
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
           <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-            <FiMessageSquare />
+            <MdOutlineSupportAgent />
           </div>
           <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Support Tickets</p>
           <p className="text-3xl font-bold text-gray-800 mt-1">{stats.totalQueries}</p>
@@ -178,9 +179,9 @@ const StudentDashboard = () => {
       <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Links</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Pay Bills", icon: <FiDollarSign />, link: "/student/bills", color: "from-emerald-400 to-emerald-500" },
+          { label: "Pay Bills", icon: <MdReceiptLong />, link: "/student/bills", color: "from-emerald-400 to-emerald-500" },
           { label: "Mess Menu", icon: <FiCalendar />, link: "/student/mess-menu", color: "from-orange-400 to-orange-500" },
-          { label: "Help Center", icon: <FiMessageSquare />, link: "/student/raise-query", color: "from-blue-400 to-blue-500" },
+          { label: "Help Center", icon: <MdOutlineSupportAgent />, link: "/student/raise-query", color: "from-blue-400 to-blue-500" },
           { label: "My Profile", icon: <FiHome />, link: "/student/profile", color: "from-violet-400 to-violet-500" },
         ].map((action, idx) => (
           <Link key={idx} to={action.link} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center justify-center gap-3 group h-32">

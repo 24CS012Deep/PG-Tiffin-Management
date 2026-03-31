@@ -44,8 +44,8 @@ export const updateCustomerProfile = async (req, res) => {
 
     // Update basic fields
     if (name) user.name = name;
-    if (phone) user.phone = phone;
-    if (address) user.address = address;
+    if (phone !== undefined) user.phone = phone;
+    if (address !== undefined) user.address = address;
     if (deliveryPreference) user.deliveryPreference = deliveryPreference;
 
     // If password change requested

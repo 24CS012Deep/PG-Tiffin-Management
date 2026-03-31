@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
 import {
-  FiBarChart2,
   FiTrendingUp,
   FiTrendingDown,
   FiUsers,
+  FiUser,
+  FiShield,
   FiDollarSign,
   FiShoppingBag,
   FiHome,
   FiPackage,
   FiCheckCircle,
   FiXCircle,
-  FiClock,
   FiAlertTriangle,
-  FiMessageSquare,
   FiStar,
   FiRefreshCw,
-  FiLoader,
   FiArrowUpRight,
   FiArrowDownRight,
 } from "react-icons/fi";
+import { TbReportAnalytics } from "react-icons/tb";
+import { MdOutlineSupportAgent } from "react-icons/md";
 
 const Reports = () => {
   const [data, setData] = useState(null);
@@ -120,7 +120,7 @@ const Reports = () => {
 
   // Section tabs
   const tabs = [
-    { id: "overview", label: "Overview", icon: <FiBarChart2 /> },
+    { id: "overview", label: "Overview", icon: <TbReportAnalytics /> },
     { id: "revenue", label: "Revenue", icon: <FiDollarSign /> },
     { id: "orders", label: "Orders", icon: <FiShoppingBag /> },
     { id: "occupancy", label: "Rooms & PG", icon: <FiHome /> },
@@ -162,7 +162,7 @@ const Reports = () => {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
             <span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-2.5 rounded-xl shadow-lg shadow-orange-200">
-              <FiBarChart2 className="text-xl" />
+              <TbReportAnalytics className="text-xl" />
             </span>
             Reports & Analytics
           </h1>
@@ -344,7 +344,7 @@ const Reports = () => {
             {/* Query Resolution */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <FiMessageSquare className="text-orange-500" /> Query Resolution
+                <MdOutlineSupportAgent className="text-orange-500" /> Query Resolution
               </h3>
               <div className="flex items-center gap-6 mb-5">
                 <div className="relative">
@@ -584,10 +584,10 @@ const Reports = () => {
               <h3 className="font-semibold text-gray-800 mb-4">Delivery Time Preferences</h3>
               <BarChart
                 items={[
-                  { label: "🌅 Breakfast", value: data.orders?.delivery?.breakfast || 0, color: "bg-yellow-400" },
-                  { label: "☀️ Lunch", value: data.orders?.delivery?.lunch || 0, color: "bg-orange-500" },
-                  { label: "🌙 Dinner", value: data.orders?.delivery?.dinner || 0, color: "bg-indigo-500" },
-                  { label: "🍽️ Both", value: data.orders?.delivery?.both || 0, color: "bg-violet-500" },
+                  { label: "Breakfast", value: data.orders?.delivery?.breakfast || 0, color: "bg-yellow-400" },
+                  { label: "Lunch", value: data.orders?.delivery?.lunch || 0, color: "bg-orange-500" },
+                  { label: "Dinner", value: data.orders?.delivery?.dinner || 0, color: "bg-indigo-500" },
+                  { label: "Both", value: data.orders?.delivery?.both || 0, color: "bg-violet-500" },
                 ]}
               />
             </div>
@@ -796,21 +796,21 @@ const Reports = () => {
                     value: data.users?.students || 0,
                     pct: data.users?.total > 0 ? ((data.users.students / data.users.total) * 100).toFixed(1) : 0,
                     color: "bg-emerald-500",
-                    icon: "🎓",
+                    icon: <FiUsers className="mr-1 inline text-emerald-500" />,
                   },
                   {
                     label: "Customers",
                     value: data.users?.customers || 0,
                     pct: data.users?.total > 0 ? ((data.users.customers / data.users.total) * 100).toFixed(1) : 0,
                     color: "bg-blue-500",
-                    icon: "👤",
+                    icon: <FiUser className="mr-1 inline text-blue-500" />,
                   },
                   {
                     label: "Admins",
                     value: data.users?.admins || 0,
                     pct: data.users?.total > 0 ? ((data.users.admins / data.users.total) * 100).toFixed(1) : 0,
                     color: "bg-orange-500",
-                    icon: "🛡️",
+                    icon: <FiShield className="mr-1 inline text-orange-500" />,
                   },
                 ].map((role, idx) => (
                   <div key={idx}>
