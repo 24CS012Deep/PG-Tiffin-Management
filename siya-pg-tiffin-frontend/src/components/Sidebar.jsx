@@ -4,7 +4,7 @@ import {
   FiHome, FiUsers, FiBox, FiShoppingBag, 
   FiLogOut, FiMenu, FiX
 } from "react-icons/fi";
-import { MdReceiptLong, MdOutlineRequestQuote, MdOutlineSupportAgent } from "react-icons/md";
+import { MdReceiptLong, MdOutlineRequestQuote, MdOutlineSupportAgent, MdOutlineRestaurantMenu } from "react-icons/md";
 import { TbReportAnalytics } from "react-icons/tb";
 import { RiSettings4Line } from "react-icons/ri";
 
@@ -20,7 +20,7 @@ const Sidebar = ({ isOpen = true, onClose = () => {} }) => {
     { name: "Tiffin Plans", path: "/admin/tiffin", icon: FiBox },
     { name: "Orders", path: "/admin/orders", icon: FiShoppingBag },
     { name: "Billing", path: "/admin/billing", icon: MdReceiptLong },
-    { name: "Generate Bills", path: "/admin/generate-bills", icon: MdOutlineRequestQuote },
+    { name: "Food Tracker", path: "/admin/food-tracker", icon: MdOutlineRestaurantMenu },
     { name: "Reports", path: "/admin/reports", icon: TbReportAnalytics },
     { name: "Queries", path: "/admin/queries", icon: MdOutlineSupportAgent },
     { name: "Settings", path: "/admin/settings", icon: RiSettings4Line },

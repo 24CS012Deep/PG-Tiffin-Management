@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { FiShoppingBag, FiXCircle, FiClock, FiCheckCircle, FiAlertCircle, FiCalendar, FiPackage } from "react-icons/fi";
+import { FiXCircle, FiClock, FiCheckCircle, FiAlertCircle, FiCamera, FiBox } from "react-icons/fi";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 import { Link } from "react-router-dom";
 
@@ -10,6 +10,7 @@ const MyOrders = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [filter, setFilter] = useState("all");
+  const [showQR, setShowQR] = useState(null); // stores order ID to show QR
 
   useEffect(() => {
     fetchOrders();
@@ -26,11 +27,11 @@ const MyOrders = () => {
     try {
       setLoading(true);
       const res = await API.get("/customer/orders");
-      setOrders(res.data);
+      setOrders(Array.isArray(res.data) ? res.data : []);
       setError("");
     } catch (err) {
       console.error("Failed to fetch orders:", err);
-      setError("Failed to load orders");
+      setError("Failed to load orders. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -57,30 +58,6 @@ const MyOrders = () => {
     return Date.now() - createdAt <= 5 * 60 * 1000;
   };
 
-  const getStatusConfig = (status) => {
-    switch (status) {
-      case "live":
-        return { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500", icon: <FiCheckCircle className="text-xs" />, label: "Live" };
-      case "completed":
-        return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", icon: <FiCheckCircle className="text-xs" />, label: "Completed" };
-      case "cancelled":
-        return { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", icon: <FiXCircle className="text-xs" />, label: "Cancelled" };
-      default:
-        return { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200", dot: "bg-gray-500", icon: null, label: status };
-    }
-  };
-
-  const getPaymentConfig = (status) => {
-    switch (status) {
-      case "paid":
-        return { bg: "bg-emerald-50", text: "text-emerald-700" };
-      case "pending":
-        return { bg: "bg-amber-50", text: "text-amber-700" };
-      default:
-        return { bg: "bg-gray-50", text: "text-gray-700" };
-    }
-  };
-
   const filters = [
     { label: "All", value: "all", count: orders.length },
     { label: "Live", value: "live", count: orders.filter((o) => o.status === "live").length },
@@ -92,7 +69,7 @@ const MyOrders = () => {
     return (
       <div className="flex flex-col items-center justify-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-        <p className="mt-4 text-gray-500">Loading your orders...</p>
+        <p className="mt-4 text-gray-500 font-medium">Loading your orders...</p>
       </div>
     );
   }
@@ -108,21 +85,21 @@ const MyOrders = () => {
             </span>
             My Orders
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Track your tiffin orders and manage deliveries.</p>
+          <p className="text-gray-500 text-sm mt-1">Track your tiffin orders and manage payments.</p>
         </div>
       </div>
 
       {/* Alerts */}
       {success && (
-        <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-5 py-3 rounded-r-xl mb-6 flex items-center gap-3">
+        <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-5 py-3 rounded-r-xl mb-6 flex items-center gap-3 font-medium text-sm">
           <FiCheckCircle className="text-lg flex-shrink-0" />
-          <span className="text-sm font-medium">{success}</span>
+          {success}
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-5 py-3 rounded-r-xl mb-6 flex items-center gap-3">
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-5 py-3 rounded-r-xl mb-6 flex items-center gap-3 font-medium text-sm">
           <FiAlertCircle className="text-lg flex-shrink-0" />
-          <span className="text-sm font-medium">{error}</span>
+          {error}
         </div>
       )}
 
@@ -132,16 +109,16 @@ const MyOrders = () => {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
               filter === f.value
-                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200"
+                ? "bg-gray-900 text-white shadow-md shadow-gray-200"
                 : "text-gray-500 hover:bg-gray-50"
             }`}
           >
             {f.label}
             <span
-              className={`text-xs px-1.5 py-0.5 rounded-full ${
-                filter === f.value ? "bg-white/25 text-white" : "bg-gray-100 text-gray-500"
+              className={`text-xs px-2 py-0.5 rounded-full ${
+                filter === f.value ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
               }`}
             >
               {f.count}
@@ -150,11 +127,11 @@ const MyOrders = () => {
         ))}
       </div>
 
-      {/* Orders */}
+      {/* Orders List */}
       {filteredOrders.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-dashed border-gray-300 p-16 text-center">
-          <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MdOutlineRestaurantMenu className="text-3xl text-orange-400" />
+        <div className="bg-white rounded-3xl shadow-sm border border-dashed border-gray-200 p-16 text-center flex flex-col items-center">
+          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-5 border border-gray-100">
+            <FiBox className="text-4xl text-gray-300" />
           </div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">No Orders Found</h2>
           <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
@@ -163,94 +140,109 @@ const MyOrders = () => {
           {filter === "all" && (
             <Link
               to="/customer/tiffin-plans"
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-200"
+              className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg shadow-orange-200"
             >
               Browse Tiffin Plans
             </Link>
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrders.map((order) => {
-            const statusConfig = getStatusConfig(order.status);
-            const paymentConfig = getPaymentConfig(order.paymentStatus);
             const cancelable = canCancelOrder(order);
 
             return (
-              <div key={order._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all">
-                {/* Top bar */}
-                <div className="flex justify-between items-center px-6 py-3 border-b border-gray-50 bg-gray-50/50">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-400 font-mono">#{order._id?.slice(-8).toUpperCase()}</span>
-                    <span className="text-xs text-gray-300">|</span>
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
-                      <FiCalendar className="text-[10px]" />
-                      {new Date(order.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    </span>
-                  </div>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
-                    {statusConfig.label}
-                  </span>
-                </div>
+              <div key={order._id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 flex flex-col overflow-hidden relative">
+                
+                {/* Header Strip */}
+                <div className={`h-2 w-full ${
+                  order.status === 'live' ? 'bg-amber-400' :
+                  order.status === 'completed' ? 'bg-emerald-500' : 'bg-red-500'
+                }`} />
 
-                {/* Content */}
-                <div className="p-6">
-                  <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-2xl shadow-sm flex-shrink-0">
-                        <MdOutlineRestaurantMenu />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">{order.tiffinPlan?.name || "Tiffin Order"}</h3>
-                        <div className="flex flex-wrap gap-3 mt-2">
-                          <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg font-medium">Qty: {order.quantity}</span>
-                          <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg font-medium capitalize flex items-center gap-1">
-                            <FiClock className="text-[10px]" /> {order.deliveryTime}
-                          </span>
-                          <span className={`text-xs px-2.5 py-1 rounded-lg font-bold capitalize ${paymentConfig.bg} ${paymentConfig.text}`}>
-                            {order.paymentStatus}
-                          </span>
-                        </div>
-                      </div>
+                <div className="p-6 flex-1 flex flex-col">
+                  {/* Title & Meal */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-black text-gray-900 leading-tight mb-1 uppercase tracking-tight">
+                        {order.tiffinPlan?.name || "Tiffin Order"}
+                      </h3>
+                      <p className="text-sm text-gray-500 font-medium flex items-center gap-1.5 capitalize">
+                        {order.deliveryTime === 'breakfast' ? '🍳' : order.deliveryTime === 'lunch' ? '🍛' : '🍽'} {order.deliveryTime === 'both' ? 'Lunch & Dinner' : order.deliveryTime}
+                      </p>
                     </div>
-
-                    <div className="flex items-center gap-2 md:flex-col md:items-end">
-                      <span className="text-xl font-black text-orange-600">₹{order.totalAmount}</span>
-                      <div className="flex gap-2 md:w-full md:justify-end">
-                        {order.status === "live" && cancelable && (
-                          <button
-                            onClick={() => cancelOrder(order._id)}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-colors"
-                          >
-                            <FiXCircle /> Cancel
-                          </button>
-                        )}
-                      </div>
-                      {order.status === "live" && !cancelable && (
-                        <p className="text-[10px] text-gray-400 max-w-[150px] text-right">
-                          Cancel window closed (5 min limit)
-                        </p>
-                      )}
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400 font-mono">#{order._id?.slice(-6).toUpperCase()}</p>
+                      <p className="text-xs text-gray-500 font-medium mt-1">
+                        {new Date(order.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Items */}
-                  {order.items?.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {order.items.map((item, idx) => (
-                        <span key={idx} className="bg-orange-50 text-orange-700 border border-orange-100 px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
-                          <MdOutlineRestaurantMenu className="text-[10px]" /> {item}
-                        </span>
-                      ))}
+                  {/* Order & Payment Status */}
+                  <div className="bg-gray-50 rounded-xl p-4 mb-5 space-y-3 flex-1 border border-gray-100">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-semibold text-gray-600">Order Status:</span>
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border ${
+                        order.status === 'live' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                        order.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                        'bg-red-100 text-red-800 border-red-200'
+                      }`}>
+                        {order.status === 'live' ? <><FiClock /> LIVE</> : order.status === 'completed' ? <><FiCheckCircle /> COMPLETED</> : <><FiXCircle /> CANCELLED</>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-semibold text-gray-600">Payment:</span>
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${
+                        order.paymentStatus === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'
+                      }`}>
+                        {order.paymentStatus === 'paid' ? '💰 PAID' : '💰 UNPAID'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                      <span className="text-sm font-semibold text-gray-600">Total Amount:</span>
+                      <span className="text-base font-black text-orange-600">₹{order.totalAmount}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 mt-auto">
+                    {order.paymentStatus !== 'paid' && order.status !== 'cancelled' ? (
+                      <button 
+                        onClick={() => setShowQR(showQR === order._id ? null : order._id)}
+                        className="flex-[2] bg-gray-900 text-white font-bold py-2.5 rounded-xl hover:bg-gray-800 transition-colors text-sm flex items-center justify-center gap-2"
+                      >
+                        <FiCamera /> Scan to Pay
+                      </button>
+                    ) : (
+                       <div className="flex-[2]" /> // empty spacer
+                    )}
+
+                    {order.status === "live" && cancelable && (
+                      <button
+                        onClick={() => cancelOrder(order._id)}
+                        className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 font-bold py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center border border-red-100"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Payment QR Code Expandable Area */}
+                  {showQR === order._id && order.paymentStatus !== 'paid' && (
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col items-center animate-fadeIn">
+                      <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-200 mb-3">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=pgtiffin@upi&pn=SwadBox&am=${order.totalAmount}&cu=INR`} 
+                          alt="UPI QR Code" 
+                          className="w-32 h-32 opacity-90"
+                        />
+                      </div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-widest text-center">Scan with GPay / PhonePe / Paytm</p>
+                      <p className="text-[10px] text-gray-400 mt-1 text-center font-medium max-w-[200px]">Once paid, please wait for the Admin to mark your order as PAID.</p>
                     </div>
                   )}
 
-                  {order.specialInstructions && (
-                    <p className="mt-3 text-xs text-gray-400 italic bg-gray-50 px-3 py-2 rounded-lg">
-                      Note: {order.specialInstructions}
-                    </p>
-                  )}
                 </div>
               </div>
             );

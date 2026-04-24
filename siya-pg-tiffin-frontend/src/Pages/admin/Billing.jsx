@@ -33,6 +33,16 @@ const Billing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sendingEmail, setSendingEmail] = useState(null);
+  
+  // NEW: Generate Bills state
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [periodType, setPeriodType] = useState("single"); // single, last, range
+  const [singleMonth, setSingleMonth] = useState("");
+  const [fromMonth, setFromMonth] = useState("");
+  const [toMonth, setToMonth] = useState("");
+  const [studentSelection, setStudentSelection] = useState("all"); // all, specific
+  const [generateType, setGenerateType] = useState("monthly");
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     fetchBillings();
@@ -97,6 +107,35 @@ const Billing = () => {
       alert(err.response?.data?.message || "Failed to send email");
     } finally {
       setSendingEmail(null);
+    }
+  };
+
+  const handleGenerateBills = async (e) => {
+    e.preventDefault();
+    if (periodType === "single" && !singleMonth) return alert("Please select a month");
+    if (periodType === "range" && (!fromMonth || !toMonth)) return alert("Please select from and to months");
+    
+    try {
+      setGenerating(true);
+      const payload = {
+        periodType,
+        singleMonth,
+        fromMonth,
+        toMonth,
+        type: generateType,
+        studentSelection,
+        specificStudents: [] // Assuming all for now unless integrated with a multi-select
+      };
+      
+      const res = await API.post("/admin/billings/generate", payload);
+      
+      setSuccess(res.data.message || `Successfully generated ${res.data.count || 0} bills`);
+      setShowGenerateModal(false);
+      fetchBillings();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to generate bills");
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -190,6 +229,12 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
           text: "text-orange-700",
           label: <span className="flex items-center gap-1"><FiShoppingBag /> Tiffin</span>,
         };
+      case "monthly":
+        return {
+          bg: "bg-indigo-100",
+          text: "text-indigo-700",
+          label: <span className="flex items-center gap-1"><FiHome /><FiShoppingBag /> Combined</span>,
+        };
       case "room":
         return { bg: "bg-violet-100", text: "text-violet-700", label: <span className="flex items-center gap-1"><FiHome /> Room</span> };
       case "mess":
@@ -273,12 +318,20 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
               accounts.
             </p>
           </div>
-          <button
-            onClick={fetchBillings}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 rounded-xl hover:bg-orange-100 transition-all"
-          >
-            <FiRefreshCw /> Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowGenerateModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition-all shadow-md shadow-orange-200 hover:-translate-y-0.5"
+            >
+              <MdReceiptLong /> Generate Bills
+            </button>
+            <button
+              onClick={fetchBillings}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 rounded-xl hover:bg-orange-100 transition-all"
+            >
+              <FiRefreshCw /> Refresh
+            </button>
+          </div>
         </div>
       </div>
 
@@ -414,9 +467,9 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
               className="px-4 py-2 bg-gray-50 border-none rounded-lg focus:ring-2 focus:ring-orange-500 text-sm outline-none"
             >
               <option value="">All Types</option>
-              <option value="tiffin">Tiffin</option>
-              <option value="room">Room</option>
-              <option value="mess">Mess</option>
+              <option value="tiffin">Tiffin Only</option>
+              <option value="room">Room Only</option>
+              <option value="monthly">Combined (Room+Food)</option>
             </select>
             <button
               onClick={() => {
@@ -636,6 +689,199 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
           </div>
         )}
       </div>
+
+      {/* Generate Bills Modal */}
+      {showGenerateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden relative border border-gray-100">
+            <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-orange-50 to-amber-50">
+              <h3 className="text-xl font-black text-gray-800 flex items-center gap-3">
+                <span className="p-2 bg-orange-500 text-white rounded-lg shadow-md">
+                  <MdReceiptLong />
+                </span>
+                Generate Bills
+              </h3>
+              <button 
+                onClick={() => setShowGenerateModal(false)}
+                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors"
+              >
+                <FiX className="text-xl" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleGenerateBills} className="p-8">
+              <div className="space-y-6">
+                {/* 1. Select Billing Period Type */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <FiCalendar className="text-orange-500" /> 1. Billing Period
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[{ id: 'last', label: 'Last Month' }, { id: 'single', label: 'Single Month' }, { id: 'range', label: 'Date Range' }].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setPeriodType(t.id)}
+                        className={`py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all text-center ${
+                          periodType === t.id 
+                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm' 
+                          : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Date Selection based on Type */}
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  {periodType === 'last' && (
+                    <div className="flex items-center gap-3 text-orange-700 font-semibold text-sm">
+                      <FiCheckCircle className="text-xl text-orange-500" />
+                      Bills will be generated for the previous calendar month.
+                    </div>
+                  )}
+                  {periodType === 'single' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select Month</label>
+                      <input 
+                        type="month" 
+                        required
+                        value={singleMonth}
+                        onChange={(e) => setSingleMonth(e.target.value)}
+                        className="w-full md:w-1/2 px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium"
+                      />
+                    </div>
+                  )}
+                  {periodType === 'range' && (
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">From Month</label>
+                        <input 
+                          type="month" 
+                          required
+                          value={fromMonth}
+                          onChange={(e) => setFromMonth(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">To Month</label>
+                        <input 
+                          type="month" 
+                          required
+                          value={toMonth}
+                          onChange={(e) => setToMonth(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 outline-none text-sm font-medium"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Student Selection */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <FiUser className="text-orange-500" /> 2. Target Students
+                  </label>
+                  <div className="flex gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-gray-100 rounded-xl flex-1 hover:bg-gray-50 transition-colors">
+                      <input 
+                        type="radio" 
+                        name="studentSel" 
+                        checked={studentSelection === "all"} 
+                        onChange={() => setStudentSelection("all")}
+                        className="w-4 h-4 text-orange-500 focus:ring-orange-500"
+                      />
+                      <span className="font-semibold text-sm text-gray-700">All Active Students</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-gray-100 rounded-xl flex-1 hover:bg-gray-50 transition-colors opacity-60">
+                      <input 
+                        type="radio" 
+                        name="studentSel" 
+                        disabled
+                        className="w-4 h-4 text-orange-500 focus:ring-orange-500"
+                      />
+                      <span className="font-semibold text-sm text-gray-700">Specific Students (Coming soon)</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 4. Bill Type */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <FiShoppingBag className="text-orange-500" /> 3. Bill Content
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setGenerateType('monthly')}
+                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
+                        generateType === 'monthly' 
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm' 
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex gap-1"><FiHome /><FiShoppingBag /></div>
+                      Combined
+                      <span className="text-[10px] font-normal uppercase tracking-wider">Room + Food</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGenerateType('room')}
+                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
+                        generateType === 'room' 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' 
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <FiHome className={generateType === 'room' ? 'text-blue-500' : ''} />
+                      Room Only
+                      <span className="text-[10px] font-normal uppercase tracking-wider">Fixed Rent</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGenerateType('tiffin')}
+                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
+                        generateType === 'tiffin' 
+                        ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm' 
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <FiShoppingBag className={generateType === 'tiffin' ? 'text-orange-500' : ''} />
+                      Tiffin Only
+                      <span className="text-[10px] font-normal uppercase tracking-wider">Food Meals</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer Actions */}
+              <div className="mt-8 pt-6 border-t border-gray-100 flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowGenerateModal(false)}
+                  className="flex-1 px-4 py-3.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold hover:bg-gray-50 hover:border-gray-300 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={generating || (periodType === 'single' && !singleMonth) || (periodType === 'range' && (!fromMonth || !toMonth))}
+                  className="flex-[2] px-4 py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
+                >
+                  {generating ? (
+                    <><FiLoader className="animate-spin text-xl" /> Generating...</>
+                  ) : (
+                    'Generate Bills Now'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

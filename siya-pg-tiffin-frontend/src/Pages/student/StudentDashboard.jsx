@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { FiHome, FiDollarSign, FiMessageSquare, FiCalendar, FiArrowRight, FiClock } from "react-icons/fi";
+import { FiHome, FiDollarSign, FiClock, FiArrowRight } from "react-icons/fi";
 import { MdWavingHand, MdReceiptLong, MdOutlineSupportAgent } from "react-icons/md";
 import { Link } from "react-router-dom";
 
@@ -8,6 +8,7 @@ const StudentDashboard = () => {
   const [stats, setStats] = useState({
     totalBills: 0,
     pendingBills: 0,
+    overdueBills: 0,
     totalQueries: 0,
     openQueries: 0,
     roomDetails: null
@@ -45,6 +46,7 @@ const StudentDashboard = () => {
         console.error("Billings API failed:", err);
       }
       const pendingBills = billsRes?.data?.filter(b => b.status === "pending").length || 0;
+      const overdueBills = billsRes?.data?.filter(b => b.status === "overdue").length || 0;
 
       // Fetch queries
       let queriesRes;
@@ -58,6 +60,7 @@ const StudentDashboard = () => {
       setStats({
         totalBills: billsRes?.data?.length || 0,
         pendingBills,
+        overdueBills,
         totalQueries: queriesRes?.data?.length || 0,
         openQueries,
         roomDetails: userRoom || null
@@ -150,12 +153,21 @@ const StudentDashboard = () => {
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 hover:shadow-md transition-all group relative overflow-hidden">
-          {stats.pendingBills > 0 && <div className="absolute top-0 right-0 w-2 h-full bg-red-500"></div>}
-          <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-            <MdReceiptLong />
+          {stats.pendingBills > 0 && <div className="absolute top-0 right-0 w-2 h-full bg-amber-400"></div>}
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+            <FiClock />
           </div>
-          <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Pending Due</p>
+          <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Pending</p>
           <p className="text-3xl font-bold text-gray-800 mt-1">{stats.pendingBills}</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group relative overflow-hidden">
+          {stats.overdueBills > 0 && <div className="absolute top-0 right-0 w-2 h-full bg-red-500"></div>}
+          <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+            <FiDollarSign />
+          </div>
+          <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Overdue</p>
+          <p className="text-3xl font-bold text-gray-800 mt-1">{stats.overdueBills}</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
@@ -165,24 +177,14 @@ const StudentDashboard = () => {
           <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Support Tickets</p>
           <p className="text-3xl font-bold text-gray-800 mt-1">{stats.totalQueries}</p>
         </div>
-
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-            <FiClock />
-          </div>
-          <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Open Tickets</p>
-          <p className="text-3xl font-bold text-gray-800 mt-1">{stats.openQueries}</p>
-        </div>
       </div>
 
       {/* Quick Actions */}
       <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Links</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
         {[
-          { label: "Pay Bills", icon: <MdReceiptLong />, link: "/student/bills", color: "from-emerald-400 to-emerald-500" },
-          { label: "Mess Menu", icon: <FiCalendar />, link: "/student/mess-menu", color: "from-orange-400 to-orange-500" },
+          { label: "Monthly Bills", icon: <MdReceiptLong />, link: "/student/bills", color: "from-emerald-400 to-emerald-500" },
           { label: "Help Center", icon: <MdOutlineSupportAgent />, link: "/student/raise-query", color: "from-blue-400 to-blue-500" },
-          { label: "My Profile", icon: <FiHome />, link: "/student/profile", color: "from-violet-400 to-violet-500" },
         ].map((action, idx) => (
           <Link key={idx} to={action.link} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center justify-center gap-3 group h-32">
             <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${action.color} text-white flex items-center justify-center text-xl group-hover:-translate-y-1 transition-transform shadow-lg`}>

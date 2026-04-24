@@ -22,6 +22,7 @@ import TiffinPlans from "./Pages/admin/TiffinPlans";
 import Orders from "./Pages/admin/Orders";
 import Billing from "./Pages/admin/Billing";
 import GenerateBills from "./Pages/admin/GenerateBills";
+import FoodTracker from "./Pages/admin/FoodTracker";
 import Reports from "./Pages/admin/Reports";
 import Queries from "./Pages/admin/Queries";
 import Settings from "./Pages/admin/Settings";
@@ -30,9 +31,9 @@ import Settings from "./Pages/admin/Settings";
 import StudentDashboard from "./Pages/student/StudentDashboard";
 import MyRoom from "./Pages/student/MyRoom";
 import RoomBills from "./Pages/student/RoomBills";
-import MessMenu from "./Pages/student/MessMenu";
 import RaiseQuery from "./Pages/student/RaiseQuery";
 import Profile from "./Pages/student/Profile";
+import StudentMyOrders from "./Pages/student/MyOrders";
 
 // Customer Pages
 import CustomerDashboard from "./Pages/customer/CustomerDashboard";
@@ -69,6 +70,7 @@ function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="billing" element={<Billing />} />
           <Route path="generate-bills" element={<GenerateBills />} />
+          <Route path="food-tracker" element={<FoodTracker />} />
           <Route path="reports" element={<Reports />} />
           <Route path="queries" element={<Queries />} />
           <Route path="settings" element={<Settings />} />
@@ -83,9 +85,9 @@ function App() {
           <Route index element={<StudentDashboard />} />
           <Route path="my-room" element={<MyRoom />} />
           <Route path="bills" element={<RoomBills />} />
-          <Route path="mess-menu" element={<MessMenu />} />
           <Route path="raise-query" element={<RaiseQuery />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="orders" element={<StudentMyOrders />} />
         </Route>
 
         {/* Customer Routes */}

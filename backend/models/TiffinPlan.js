@@ -54,15 +54,9 @@ const tiffinPlanSchema = new mongoose.Schema({
     enum: ["breakfast", "lunch", "dinner"],
     default: ["lunch", "dinner"]
   }],
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  },
-  updatedAt: { 
-    type: Date, 
-    default: Date.now 
-  }
-});
+  // NOTE: Manual createdAt/updatedAt removed.
+  // Using timestamps:true so Mongoose auto-manages both fields reliably on every save().
+}, { timestamps: true });
 
 const TiffinPlan = mongoose.models.TiffinPlan || mongoose.model("TiffinPlan", tiffinPlanSchema);
 export default TiffinPlan;

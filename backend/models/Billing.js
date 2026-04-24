@@ -19,7 +19,7 @@ const billingSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["room", "tiffin"],
+    enum: ["room", "tiffin", "mess", "monthly"],
     required: true
   },
   status: {

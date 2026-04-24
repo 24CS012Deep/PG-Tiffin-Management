@@ -59,6 +59,11 @@ const Settings = () => {
   // ─── Active Section Tab ──────────────────────────────────
   const [activeSection, setActiveSection] = useState("profile");
 
+  // ─── Test Email State ─────────────────────────────────────
+  const [testEmailAddr, setTestEmailAddr] = useState("");
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState(null); // { success, message, error, hint }
+
   // ─── Fetch admin profile on mount ────────────────────────
   useEffect(() => {
     fetchProfile();
@@ -258,11 +263,33 @@ const Settings = () => {
 
   const pwStrength = getPasswordStrength(passwordForm.newPassword);
 
+  // ─── Test Email Handler ───────────────────────────────────
+  const handleTestEmail = async (e) => {
+    e.preventDefault();
+    setTestEmailLoading(true);
+    setTestEmailResult(null);
+    try {
+      const res = await API.post("/admin/test-email", { email: testEmailAddr.trim() || undefined });
+      setTestEmailResult({ success: true, message: res.data.message });
+    } catch (err) {
+      const d = err.response?.data || {};
+      setTestEmailResult({
+        success: false,
+        message: d.message || "Email failed to send",
+        error: d.error || err.message,
+        hint: d.hint || "",
+      });
+    } finally {
+      setTestEmailLoading(false);
+    }
+  };
+
   // ─── Section tabs ────────────────────────────────────────
   const sections = [
     { id: "profile", label: "Admin Profile", icon: <FiUser /> },
     { id: "password", label: "Change Password", icon: <FiLock /> },
     { id: "preferences", label: "App Preferences", icon: <RiSettings4Line /> },
+    { id: "email", label: "Email Config", icon: <FiMail /> },
   ];
 
   if (profileLoading) {
@@ -809,6 +836,88 @@ const Settings = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+          {/* ═══════════ EMAIL CONFIG SECTION ═══════════ */}
+          {activeSection === "email" && (
+            <div>
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <FiMail className="text-orange-500" /> Email Configuration
+                </h2>
+                <p className="text-gray-400 text-sm mt-0.5">
+                  Test your SMTP email setup and diagnose delivery issues
+                </p>
+              </div>
+
+              {/* Gmail Setup Guide */}
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <h3 className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-2">
+                  <FiAlertCircle className="text-amber-600" /> Gmail Setup Required
+                </h3>
+                <ol className="text-xs text-amber-700 space-y-1.5 list-decimal list-inside">
+                  <li>Go to <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer" className="underline font-medium">Google Account → Security</a></li>
+                  <li>Enable <strong>2-Step Verification</strong> on your Gmail account</li>
+                  <li>Search for <strong>"App Passwords"</strong> and generate one for "Mail"</li>
+                  <li>Copy the 16-character password (no spaces) into <code className="bg-amber-100 px-1 rounded">EMAIL_PASS</code> in your <code className="bg-amber-100 px-1 rounded">.env</code> file</li>
+                  <li>Restart the backend server after updating <code className="bg-amber-100 px-1 rounded">.env</code></li>
+                </ol>
+              </div>
+
+              {/* Test Email Form */}
+              <form onSubmit={handleTestEmail} className="max-w-lg space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">
+                    <FiMail className="inline mr-1 text-orange-500" /> Send Test Email To
+                  </label>
+                  <input
+                    type="email"
+                    value={testEmailAddr}
+                    onChange={(e) => setTestEmailAddr(e.target.value)}
+                    placeholder={user?.email || "Leave blank to use admin email"}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Leave blank to send to your admin email address</p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={testEmailLoading}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all disabled:opacity-50 flex items-center gap-2 shadow-md shadow-orange-200"
+                >
+                  {testEmailLoading ? (
+                    <><FiLoader className="animate-spin" /> Sending...</>
+                  ) : (
+                    <><FiMail /> Send Test Email</>
+                  )}
+                </button>
+
+                {/* Test Result */}
+                {testEmailResult && (
+                  <div className={`p-4 rounded-xl border ${
+                    testEmailResult.success
+                      ? "bg-emerald-50 border-emerald-200"
+                      : "bg-red-50 border-red-200"
+                  }`}>
+                    <p className={`text-sm font-semibold flex items-center gap-2 ${
+                      testEmailResult.success ? "text-emerald-700" : "text-red-700"
+                    }`}>
+                      {testEmailResult.success ? <FiCheckCircle /> : <FiAlertCircle />}
+                      {testEmailResult.message}
+                    </p>
+                    {testEmailResult.error && (
+                      <p className="text-xs text-red-600 mt-2 font-mono bg-red-100 p-2 rounded">
+                        Error: {testEmailResult.error}
+                      </p>
+                    )}
+                    {testEmailResult.hint && (
+                      <p className="text-xs text-amber-700 mt-2">
+                        💡 {testEmailResult.hint}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </form>
             </div>
           )}
         </div>

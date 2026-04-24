@@ -41,15 +41,32 @@ const orderSchema = new mongoose.Schema({
     default: "both"
   },
   specialInstructions: String,
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
+  // OTP verification fields
+  otp: {
+    type: String,
+    default: null
   },
-  updatedAt: { 
-    type: Date, 
-    default: Date.now 
-  }
-});
+  otpExpiresAt: {
+    type: Date,
+    default: null
+  },
+  otpVerified: {
+    type: Boolean,
+    default: false
+  },
+  otpVerifiedAt: {
+    type: Date,
+    default: null
+  },
+  deliveryStatus: {
+    type: String,
+    enum: ["pending", "delivered", "verified"],
+    default: "pending"
+  },
+  // ✅ FIX: Removed manual createdAt/updatedAt fields.
+  // Using timestamps:true below so Mongoose auto-manages them reliably.
+  // This fixes the canCancelOrder() bug where order.createdAt was sometimes null.
+}, { timestamps: true });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 export default Order;

@@ -233,24 +233,13 @@ export const removeStudent = async (req, res) => {
 /* ================= GET STUDENT'S ROOM ================= */
 export const getStudentRoom = async (req, res) => {
   try {
-    // Get the current student from the authenticated user
-    const student = await User.findById(req.user.id);
+    const studentId = req.user.id;
     
-    if (!student || student.role !== "student") {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
-    // If student has no roomNumber, return no room data
-    if (!student.roomNumber) {
-      return res.json(null);
-    }
-
-    // Find room by the roomNumber stored in student document
-    const room = await Room.findOne({ roomNumber: student.roomNumber })
+    // Find room where this student ID is in the students array
+    const room = await Room.findOne({ students: studentId })
       .populate("students", "name email _id");
 
     if (!room) {
-      // Room was deleted but student still has roomNumber reference
       return res.json(null);
     }
 

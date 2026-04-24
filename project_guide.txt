@@ -1,0 +1,71 @@
+=========================================================
+            SWADBOX PG & TIFFIN MANAGEMENT
+                     PROJECT GUIDE
+=========================================================
+
+Welcome to the newly debugged and stable version of SwadBox!
+This guide explains the workflow for the Admin, Student, and Customer roles,
+with a focus on the most recently fixed features like ordering, OTP, and menu.
+
+---
+1. ADMIN WORKFLOW (Menu & Orders)
+---
+1.1 Add/Update Daily Meal Records (Menu)
+  - Go to the Admin Panel -> Tiffin Plans.
+  - Create a new Tiffin Plan (e.g., "Standard Veg Month").
+  - Click on "Set Menu" to define what is being served for a given date.
+  * FIXED: The target date you save now strictly saves as your local time (IST).
+    Students viewing it after 6:30 PM will correctly see the menu for the selected date
+    and not see a "Menu Coming Soon" screen due to UTC timezone offsets.
+
+1.2 Check & Update Orders
+  - Go to Admin Panel -> Orders. You will see both Student and Customer orders here.
+  - When an order is ready/delivered, open the order and change the status from "Live" to "Completed".
+  * FIXED: Marking an order as "completed" automatically generates a 6-digit OTP and
+    sends it to the user's registered email via NodeMailer. (Email dispatch is now extremely fast).
+
+1.3 Admin Account Creation 
+  - Admin needs to manually create accounts for Students with the initial login details.
+
+---
+2. STUDENT WORKFLOW
+---
+2.1 Dashboard & Mess Menu
+  - Login as Student. The dashboard now properly tallies your total Bills, open Queries, AND your "Live Orders".
+  - Navigate to the "Mess Menu" section to see what is cooking today and view Tiffin plans.
+
+2.2 Placing & Managing Orders (NEWLY ADDED)
+  - From the Mess Menu, subscribe/buy a Tiffin plan. 
+  - Go to your newly added "My Orders" tab on the left sidebar.
+  - In "My Orders", you can view Live, Completed, and Cancelled orders.
+  - For 5 minutes after placing an order, you have the option to Cancel.
+  * FIXED: The 5-minute auto-cancellation logic properly counts time from when you created the order (Timestamps configured).
+
+2.3 Verifying Delivery (OTP)
+  - Once the Admin marks your order as "Completed", it goes into a "📦 Received - Pending Confirmation" state.
+  - Check your registered email for the 6-digit OTP code sent from SwadBox.
+  - In the "My Orders" page, click the pulsing orange "🔐 Confirm Receipt" button.
+  - Enter the OTP in the modal. Your order will officially show as "✅ Verified".
+  * FIXED: Students can now correctly verify their OTPs (previously it was hardcoded for customers only).
+
+---
+3. CUSTOMER WORKFLOW
+---
+The flow is nearly identical to the Student workflow above, with the primary difference being
+customers do not have rooms assigned to them.
+  - Sign up -> Login
+  - Buy from Tiffin Plans
+  - Go to "My Orders", view your plan
+  - Receive OTP upon Admin marking order "Completed"
+  - Click "🔐 Confirm Receipt" to enter OTP and resolve the delivery.
+
+---
+4. RECENT SYSTEM FIXES FOR DEVELOPER
+---
+1. Email Notifications: OTP and Welcome emails are extremely stable. The Nodemailer connection pool is initialized once on backend startup, not on every request.
+2. Orders Model: Now correctly tracks "createdAt" and "updatedAt" to flawlessly calculate timestamps.
+3. Students Order Access: Missing frontend pages were wired back up to existing backend code.
+4. Timezones Fixed: Both front-end and back-end utilize local time strings for date checking for Menu records. 
+
+Enjoy your PG-Tiffin Management System!
+=========================================================

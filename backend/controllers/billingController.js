@@ -30,54 +30,135 @@ export const getAllBillings = async (req, res) => {
 /* ================= GENERATE BILLS ================= */
 export const generateBills = async (req, res) => {
   try {
-    const { month, type } = req.body;
-    
-    if (type === "tiffin") {
-      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+    const { periodType, singleMonth, fromMonth, toMonth, type, studentSelection, specificStudents } = req.body;
 
-      const orders = await Order.find({
-        createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-        status: "completed"
-      }).populate("customer");
-
-      const customerBills = {};
-      
-      for (const order of orders) {
-        const customerId = order.customer?._id?.toString();
-        if (customerId) {
-          if (!customerBills[customerId]) {
-            customerBills[customerId] = {
-              user: customerId,
-              month,
-              amount: 0,
-              type: "tiffin",
-              status: "pending",
-              details: `Tiffin bills for ${month}`
-            };
-          }
-          customerBills[customerId].amount += order.totalAmount || 0;
-        }
+    // Determine the list of months
+    let months = [];
+    if (periodType === "last") {
+      const now = new Date();
+      now.setMonth(now.getMonth() - 1);
+      months.push(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    } else if (periodType === "range") {
+      const start = new Date(fromMonth + "-01");
+      const end = new Date(toMonth + "-01");
+      let current = new Date(start);
+      while (current <= end) {
+        months.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`);
+        current.setMonth(current.getMonth() + 1);
       }
-
-      const createdBills = [];
-      for (const billData of Object.values(customerBills)) {
-        const existingBill = await Billing.findOne({ 
-          user: billData.user, 
-          month: billData.month,
-          type: "tiffin"
-        });
-        
-        if (!existingBill) {
-          const bill = await Billing.create(billData);
-          createdBills.push(bill);
-        }
-      }
-
-      res.json({ success: true, count: createdBills.length });
     } else {
-      res.json({ success: true, count: 0 });
+      months.push(singleMonth);
     }
+
+    if (months.length === 0) {
+      return res.status(400).json({ message: "Invalid month selection" });
+    }
+
+    let createdCount = 0;
+    const Room = (await import("../models/Room.js")).default;
+
+    for (const month of months) {
+      const [yearStr, monthStr] = month.split("-");
+      const startOfMonth = new Date(yearStr, parseInt(monthStr) - 1, 1);
+      const endOfMonth = new Date(yearStr, parseInt(monthStr), 0);
+
+      // --- TIFFIN LOGIC ---
+      if (type === "tiffin" || type === "monthly") {
+        const orderQuery = {
+          createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+          status: "completed"
+        };
+        if (studentSelection === "specific" && specificStudents?.length > 0) {
+          orderQuery.customer = { $in: specificStudents };
+        }
+
+        const orders = await Order.find(orderQuery).populate("customer");
+        const userTotals = {};
+        for (const order of orders) {
+          const customerId = order.customer?._id?.toString();
+          if (customerId) {
+            if (!userTotals[customerId]) userTotals[customerId] = 0;
+            userTotals[customerId] += order.totalAmount || 0;
+          }
+        }
+
+        if (type === "tiffin") {
+          for (const [userId, amt] of Object.entries(userTotals)) {
+            const existingBill = await Billing.findOne({ user: userId, month, type: "tiffin" });
+            if (!existingBill) {
+              await Billing.create({
+                user: userId, month, amount: amt, type: "tiffin",
+                status: "pending", details: `Tiffin bills for ${month}`
+              });
+              createdCount++;
+            }
+          }
+        } else if (type === "monthly") {
+          // Monthly handles tiffin later, merged with room
+          req.tempTiffinTotals = req.tempTiffinTotals || {};
+          req.tempTiffinTotals[month] = userTotals;
+        }
+      }
+
+      // --- ROOM LOGIC ---
+      if (type === "room" || type === "monthly") {
+        const rooms = await Room.find({ students: { $exists: true, $not: { $size: 0 } } });
+        const userRooms = {};
+        for (const room of rooms) {
+          for (const studentId of room.students) {
+            const sId = studentId.toString();
+            if (studentSelection === "specific" && specificStudents && !specificStudents.includes(sId)) {
+              continue; // Skip if not in specific list
+            }
+            userRooms[sId] = { rent: room.rent || 5000, roomNumber: room.roomNumber };
+          }
+        }
+
+        if (type === "room") {
+          for (const [userId, roomData] of Object.entries(userRooms)) {
+            const existingBill = await Billing.findOne({ user: userId, month, type: "room" });
+            if (!existingBill) {
+              await Billing.create({
+                user: userId, month, amount: roomData.rent, type: "room",
+                status: "pending", details: `Room Rent for ${month} (Room: ${roomData.roomNumber})`
+              });
+              createdCount++;
+            }
+          }
+        } else if (type === "monthly") {
+          // Merge Tiffin + Room
+          const tiffinData = (req.tempTiffinTotals && req.tempTiffinTotals[month]) || {};
+          // Users who have room rent OR tiffin
+          const allUserIds = new Set([...Object.keys(userRooms), ...Object.keys(tiffinData)]);
+
+          for (const userId of allUserIds) {
+            if (studentSelection === "specific" && specificStudents && !specificStudents.includes(userId)) {
+              continue;
+            }
+            const existingBill = await Billing.findOne({ user: userId, month, type: "monthly" });
+            if (!existingBill) {
+              const rAmt = userRooms[userId]?.rent || 0;
+              const tAmt = tiffinData[userId] || 0;
+              const rNum = userRooms[userId]?.roomNumber;
+
+              if (rAmt > 0 || tAmt > 0) {
+                let detailsArr = [];
+                if (rAmt > 0) detailsArr.push(`Room Rent (Room: ${rNum || 'N/A'}): ₹${rAmt}`);
+                if (tAmt > 0) detailsArr.push(`Daily Food: ₹${tAmt}`);
+
+                await Billing.create({
+                  user: userId, month, amount: rAmt + tAmt, type: "monthly",
+                  status: "pending", details: detailsArr.join(" | ") || `Monthly Bill for ${month}`
+                });
+                createdCount++;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    res.json({ success: true, count: createdCount, message: `Bills generated for ${months.join(', ')}` });
   } catch (error) {
     console.error("Generate bills error:", error);
     res.status(500).json({ message: "Failed to generate bills" });
@@ -88,7 +169,7 @@ export const generateBills = async (req, res) => {
 export const updateBillingStatus = async (req, res) => {
   try {
     const { status, paymentMethod, transactionId } = req.body;
-    
+
     const billing = await Billing.findByIdAndUpdate(
       req.params.id,
       {

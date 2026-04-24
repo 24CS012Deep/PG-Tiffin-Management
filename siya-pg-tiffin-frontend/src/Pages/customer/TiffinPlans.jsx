@@ -11,11 +11,18 @@ const TiffinPlans = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [ordering, setOrdering] = useState(false);
+  // Helper: always produce today's date in local timezone (not UTC)
+  // toISOString() gives UTC which is 5h30m behind IST — wrong after 6:30 PM
+  const getLocalDateStr = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  };
+
   const [orderData, setOrderData] = useState({
     quantity: 1,
     deliveryTime: "both",
     specialInstructions: "",
-    date: new Date().toISOString().split("T")[0],
+    date: getLocalDateStr(),
   });
 
   useEffect(() => {
@@ -42,36 +49,22 @@ const TiffinPlans = () => {
         return;
       }
 
-      const todayStr = new Date().toISOString().split('T')[0];
-      
       const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      const todayStr = `${y}-${m}-${d}`;
+      
       const currentHours = now.getHours().toString().padStart(2, '0');
       const currentMinutes = now.getMinutes().toString().padStart(2, '0');
       const currentTimeStr = `${currentHours}:${currentMinutes}`;
       
       console.log(`📅 Today: ${todayStr}, Current Time: ${currentTimeStr}`);
       
-      // Filter plans: Keep plans unless they're explicitly expired
+      // Filter plans: Only explicitly inactive plans should be hidden.
+      // Expired plans or those past cutoff should still show up (but their order button will be disabled) so the user knows what happened.
       const validPlans = res.data.filter(plan => {
-        // Skip if explicitly marked inactive
-        if (plan.isActive === false) {
-          console.log(`⏸️ Skipping inactive plan: ${plan.name}`);
-          return false;
-        }
-        
-        // Skip if targetDate is in the past
-        if (plan.targetDate && plan.targetDate < todayStr) {
-          console.log(`📭 Skipping expired plan: ${plan.name} (target: ${plan.targetDate})`);
-          return false;
-        }
-        
-        // Skip if it's today and cutOffTime has passed
-        if (plan.targetDate === todayStr && plan.cutOffTime && currentTimeStr > plan.cutOffTime) {
-          console.log(`⏰ Skipping plan with passed cutoff: ${plan.name} (cutoff: ${plan.cutOffTime})`);
-          return false;
-        }
-        
-        console.log(`✅ Including plan: ${plan.name}`);
+        if (plan.isActive === false) return false;
         return true;
       });
 
@@ -100,7 +93,8 @@ const TiffinPlans = () => {
       });
       setShowOrderModal(false);
       setSuccess("🎉 Order placed successfully! Check your email for confirmation.");
-      setOrderData({ quantity: 1, deliveryTime: "both", specialInstructions: "", date: new Date().toISOString().split("T")[0] });
+      // Reset date using local timezone helper so post-6:30 PM IST resets don't show yesterday
+      setOrderData({ quantity: 1, deliveryTime: "both", specialInstructions: "", date: getLocalDateStr() });
     } catch (err) {
       alert(err.response?.data?.message || "Failed to place order");
     } finally {
@@ -161,19 +155,41 @@ const TiffinPlans = () => {
           const isVeg = plan.type === "veg";
           const capacityPercent = Math.min(100, (plan.currentCustomers / plan.maxCustomers) * 100);
 
+          // Calculate if time window has passed
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = String(now.getMonth() + 1).padStart(2, "0");
+          const d = String(now.getDate()).padStart(2, "0");
+          const currentDayStr = `${y}-${m}-${d}`;
+          const currentHours = now.getHours().toString().padStart(2, '0');
+          const currentMinutes = now.getMinutes().toString().padStart(2, '0');
+          const currentTimeString = `${currentHours}:${currentMinutes}`;
+
+          let isExpired = false;
+          let expireReason = "";
+          if (plan.targetDate && plan.targetDate < currentDayStr) {
+            isExpired = true;
+            expireReason = "Date Passed";
+          } else if (plan.targetDate === currentDayStr && plan.cutOffTime && currentTimeString > plan.cutOffTime) {
+            isExpired = true;
+            expireReason = "Cut-off Passed";
+          }
+
+          const buttonDisabled = isFull || isExpired;
+
           return (
             <div
               key={plan._id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative"
+              className={`bg-white rounded-2xl shadow-sm border ${isExpired ? 'border-gray-200 opacity-80' : 'border-gray-100'} overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative`}
             >
               {/* Decorative Pattern */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-50 to-orange-100/30 rounded-bl-3xl -z-0 group-hover:scale-125 transition-transform duration-500"></div>
+              <div className={`absolute top-0 right-0 w-40 h-40 ${isExpired ? 'bg-gradient-to-br from-gray-50 to-gray-100' : 'bg-gradient-to-br from-orange-50 to-orange-100/30'} rounded-bl-3xl -z-0 group-hover:scale-125 transition-transform duration-500`}></div>
 
               {/* Top Gradient Bar */}
-              <div className="h-1.5 w-full bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500"></div>
+              <div className={`h-1.5 w-full ${isExpired ? 'bg-gray-400' : 'bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500'}`}></div>
 
               {/* Top Gradient */}
-              <div className="h-32 bg-gradient-to-r from-orange-400 to-amber-500 relative overflow-hidden flex items-center justify-center">
+              <div className={`h-32 ${isExpired ? 'bg-gray-300' : 'bg-gradient-to-r from-orange-400 to-amber-500'} relative overflow-hidden flex items-center justify-center`}>
                 <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
                 <span className="text-4xl z-10 drop-shadow-lg group-hover:scale-110 transition-transform text-white/40">
                   <MdOutlineRestaurantMenu />
@@ -191,13 +207,13 @@ const TiffinPlans = () => {
 
                 {/* Price Badge */}
                 <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-white/50">
-                  <span className="text-2xl font-black text-orange-600">₹{plan.price}</span>
+                  <span className={`text-2xl font-black ${isExpired ? 'text-gray-500' : 'text-orange-600'}`}>₹{plan.price}</span>
                   <span className="text-xs text-gray-400 block font-medium">/month</span>
                 </div>
               </div>
 
               <div className="p-5 flex-1 flex flex-col relative z-10">
-                <h2 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-orange-600 transition-colors">{plan.name}</h2>
+                <h2 className={`text-lg font-bold mb-1 transition-colors ${isExpired ? 'text-gray-600' : 'text-gray-800 group-hover:text-orange-600'}`}>{plan.name}</h2>
                 <p className="text-gray-500 text-[12px] mb-4 line-clamp-1">{plan.description || "Premium meal plan"}</p>
 
                 {/* Capacity Bar */}
@@ -229,41 +245,48 @@ const TiffinPlans = () => {
                   {plan.targetDate && (
                     <div className="flex items-start gap-2">
                       <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider min-w-12">📅 Date</span>
-                      <span className="text-[12px] font-semibold text-gray-700">{new Date(plan.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      <span className={`text-[12px] font-semibold ${isExpired ? 'text-red-500' : 'text-gray-700'}`}>{new Date(plan.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                   )}
                   {plan.cutOffTime && (
                     <div className="flex items-start gap-2">
                       <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider min-w-12">⏰ Order By</span>
-                      <span className="text-[12px] font-semibold text-gray-700">{plan.cutOffTime}</span>
+                      <span className={`text-[12px] font-semibold ${isExpired ? 'text-red-500' : 'text-gray-700'}`}>{plan.cutOffTime}</span>
+                    </div>
+                  )}
+                  {isExpired && (
+                    <div className="text-[11px] font-bold text-red-500 flex items-center gap-1 mt-2">
+                      <FiAlertCircle /> Ordering closed ({expireReason})
                     </div>
                   )}
                 </div>
 
                 {/* Price Section */}
                 <div className="pt-3 border-t border-gray-100 text-center mb-4">
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wide mb-1">Monthly Price</p>
-                  <p className="text-2xl font-black text-orange-600">₹{plan.price}</p>
+                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wide mb-1">Total</p>
+                   <p className={`text-2xl font-black ${isExpired ? 'text-gray-400' : 'text-orange-600'}`}>₹{plan.price}</p>
                 </div>
 
                 {/* Action Button */}
                 <button
                   onClick={() => {
+                    if (buttonDisabled) return;
                     setSelectedPlan(plan);
                     setShowOrderModal(true);
                     setOrderData((prev) => ({
                        ...prev,
-                       date: plan.targetDate ? plan.targetDate : new Date().toISOString().split("T")[0]
+                       // Use getLocalDateStr() to avoid UTC offset issue for IST users after 6:30 PM
+                       date: plan.targetDate ? plan.targetDate : getLocalDateStr()
                     }));
                   }}
-                  disabled={isFull}
+                  disabled={buttonDisabled}
                   className={`w-full py-2.5 px-4 rounded-xl font-bold text-[12px] uppercase tracking-wide transition-all duration-300 border-2 ${
-                    isFull
+                    buttonDisabled
                       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                       : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white border-transparent hover:shadow-lg hover:from-orange-600 hover:to-amber-700 active:scale-95'
                   }`}
                 >
-                  {isFull ? <><FiX className="text-lg" /> Sold Out</> : <><FiStar className="text-lg" /> Order Now</>}
+                  {isFull ? <><FiX className="text-lg" /> Sold Out</> : isExpired ? <><FiClock className="text-lg" /> Time Expired</> : <><FiStar className="text-lg" /> Order Now</>}
                 </button>
               </div>
             </div>
@@ -302,7 +325,7 @@ const TiffinPlans = () => {
                      value={orderData.date}
                      onChange={(e) => setOrderData({ ...orderData, date: e.target.value })}
                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all font-medium"
-                     min={new Date().toISOString().split("T")[0]}
+                     min={getLocalDateStr()}
                    />
                 )}
               </div>

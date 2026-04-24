@@ -107,8 +107,15 @@ export const setTodaysMenu = async (req, res) => {
   try {
     const { planId, items, date } = req.body;
     
-    // Provide a fallback to today in local timezone format if not provided
-    const targetDate = date || new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    // Provide a fallback to today in local timezone using a reliable method.
+    // NOTE: The old formula `getTime() - (getTimezoneOffset() * 60000)` is WRONG for UTC+ zones
+    // because getTimezoneOffset() returns a NEGATIVE value for IST (UTC+5:30), making it add time.
+    // Instead, we directly read the local date parts from the Date object.
+    const now = new Date();
+    const localYear = now.getFullYear();
+    const localMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const localDay = String(now.getDate()).padStart(2, '0');
+    const targetDate = date || `${localYear}-${localMonth}-${localDay}`;
     
     const plan = await TiffinPlan.findById(planId);
     if (!plan) return res.status(404).json({ message: "Plan not found" });

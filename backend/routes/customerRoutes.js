@@ -9,7 +9,8 @@ import {
 import { 
   createOrder, 
   getUserOrders, 
-  cancelOrder
+  cancelOrder,
+  verifyOrderOTP
 } from "../controllers/orderController.js";  // ✅ These now exist
 import { getUserBillings } from "../controllers/billingController.js";
 import { createQuery, getUserQueries } from "../controllers/queryController.js";
@@ -27,6 +28,7 @@ router.get("/tiffin-plans", getTiffinPlans);
 router.get("/orders", getUserOrders);           // ✅ Now works
 router.post("/orders", createOrder);             // ✅ Now works
 router.put("/orders/:id/cancel", cancelOrder);   // ✅ Now works
+router.post("/orders/verify-otp", verifyOrderOTP); // ✅ OTP Verification
 router.get("/billings", getUserBillings);
 router.get("/queries", getUserQueries);
 router.post("/queries", createQuery);
