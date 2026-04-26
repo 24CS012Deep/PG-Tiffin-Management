@@ -33,7 +33,6 @@ import MyRoom from "./Pages/student/MyRoom";
 import MonthlyBills from "./Pages/student/MonthlyBills";
 import RaiseQuery from "./Pages/student/RaiseQuery";
 import Profile from "./Pages/student/Profile";
-import StudentMyOrders from "./Pages/student/MyOrders";
 
 // Customer Pages
 import CustomerDashboard from "./Pages/customer/CustomerDashboard";
@@ -87,7 +86,6 @@ function App() {
           <Route path="bills" element={<MonthlyBills />} />
           <Route path="raise-query" element={<RaiseQuery />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="orders" element={<StudentMyOrders />} />
         </Route>
 
         {/* Customer Routes */}

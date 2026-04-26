@@ -11,7 +11,6 @@ const StudentSidebar = () => {
   const menu = [
     { name: "Dashboard", path: "/student", icon: FiHome },
     { name: "My Room", path: "/student/my-room", icon: FiHome },
-    { name: "My Orders", path: "/student/orders", icon: FiShoppingBag },
     { name: "Monthly Bills", path: "/student/bills", icon: MdReceiptLong },
     { name: "Raise Query", path: "/student/raise-query", icon: MdOutlineSupportAgent },
     { name: "Profile", path: "/student/profile", icon: FiUser },

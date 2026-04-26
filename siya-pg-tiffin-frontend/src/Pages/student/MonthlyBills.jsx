@@ -14,8 +14,6 @@ const MonthlyBills = () => {
   const [error, setError] = useState("");
   const [view, setView] = useState("active"); // 'active' or 'history'
   
-
-
   const fetchRecords = async () => {
     try {
       setLoading(true);
