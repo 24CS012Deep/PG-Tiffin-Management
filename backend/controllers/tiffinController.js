@@ -131,9 +131,8 @@ export const updateTiffinPlan = async (req, res) => {
     // Notify customers if the plan just became active or was updated while active
     // (Wait: maybe only if it just became active? Or any change to items?)
     // The user said "when the admin created the plan then active".
-    if (plan.isActive) {
-      notifyCustomersOfNewMenu(plan);
-    }
+    // User requested: Only notify on plan creation, not on every update.
+    // So the notification block that was here has been removed.
 
     res.json(plan);
   } catch (error) {

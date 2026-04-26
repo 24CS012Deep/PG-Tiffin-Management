@@ -48,13 +48,6 @@ export const notifyCustomersOfNewMenu = async (plan) => {
                 ${plan.description ? `<p style="margin-top: 20px; font-style: italic; color: #555; background: white; padding: 10px; border-radius: 8px; font-size: 14px;">${plan.description}</p>` : ''}
               </div>
               
-              <div style="text-align: center; margin-top: 40px;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/customer/tiffin-plans" 
-                   style="background: #f97316; color: white; padding: 15px 35px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 18px; display: inline-block; box-shadow: 0 5px 15px rgba(249, 115, 22, 0.3);">
-                   Log in to Subscribe
-                </a>
-                <p style="margin-top: 15px; color: #666; font-size: 14px;">Log in to your portal to manage your orders.</p>
-              </div>
             </div>
             
             <div style="background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #eee;">
