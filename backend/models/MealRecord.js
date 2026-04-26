@@ -33,7 +33,7 @@ const mealRecordSchema = new mongoose.Schema({
   totalAmount:  { type: Number, default: 0 },
   paymentStatus: {
     type: String,
-    enum: ["pending", "paid", "overdue"],
+    enum: ["pending", "paid"],
     default: "pending"
   },
   paidAt: Date,

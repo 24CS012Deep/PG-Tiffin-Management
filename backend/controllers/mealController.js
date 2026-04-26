@@ -2,6 +2,7 @@ import MealRecord from "../models/MealRecord.js";
 import User from "../models/User.js";
 import Room from "../models/Room.js";
 import sendEmail from "../utils/sendEmail.js";
+import Billing from "../models/Billing.js";
 
 /* ── helpers ─────────────────────────────────────────────── */
 const computeTotals = (dailyRecords, mealPrices) => {
@@ -138,6 +139,44 @@ export const generateMealBill = async (req, res) => {
       await record.save();
     }
 
+
+    const existingBill = await Billing.findOne({ 
+      user: studentId, 
+      month: month, 
+      type: "tiffin" 
+    });
+
+
+    
+    // Calculate meal counts for the breakdown
+    const mealCounts = {
+      breakfast: record.dailyRecords.filter(r => r.breakfast).length,
+      lunch: record.dailyRecords.filter(r => r.lunch).length,
+      dinner: record.dailyRecords.filter(r => r.dinner).length
+    };
+
+    const billingData = {
+      user: studentId,
+      month: month,
+      amount: record.totalAmount,
+      type: "tiffin",
+      status: record.paymentStatus,
+      details: `Consolidated bill for ${month}`,
+      breakdown: {
+        roomRent: record.roomRent,
+        foodCharges: record.foodCharges,
+        mealCounts: mealCounts,
+        dailyRecords: record.dailyRecords // Full breakdown for PDF
+      },
+      generatedAt: record.generatedAt
+    };
+
+    if (existingBill) {
+      await Billing.findByIdAndUpdate(existingBill._id, billingData);
+    } else {
+      await Billing.create(billingData);
+    }
+
     // Send email to student
     if (record.student?.email) {
       try {
@@ -180,7 +219,7 @@ export const generateMealBill = async (req, res) => {
                   </tr>
                   ${mealRows}
                 </table>` : ''}
-                <p style="margin-top:20px;color:#dc2626;font-weight:600">Please pay before the due date to avoid overdue charges.</p>
+                <p style="margin-top:20px;color:#374151;font-weight:600">Please pay by the due date to ensure smooth processing.</p>
               </div>
             </div>`
         });
@@ -212,6 +251,17 @@ export const updateMealBillStatus = async (req, res) => {
     ).populate("student", "name email");
 
     if (!record) return res.status(404).json({ message: "Record not found" });
+    
+
+    await Billing.findOneAndUpdate(
+      { user: record.student, month: record.month, type: "tiffin" },
+      { 
+        status: status,
+        paymentMethod,
+        transactionId,
+        paidAt: status === "paid" ? new Date() : null
+      }
+    );
 
     // Email on paid
     if (status === "paid" && record.student?.email) {

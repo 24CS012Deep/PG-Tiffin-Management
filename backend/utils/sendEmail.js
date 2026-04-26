@@ -33,8 +33,8 @@ const getTransporter = () => {
 // - SMTP error code (e.g. 535 = Bad credentials, 421 = rate limit)
 // - SMTP server response string
 // - Setup guide link for the most common cause (Gmail App Password)
-const sendEmail = async ({ to, subject, html }) => {
-  console.log("📧 Sending email to:", to, "| Subject:", subject);
+const sendEmail = async ({ to, bcc, subject, html }) => {
+  console.log("📧 Sending email to:", to, bcc ? `| BCC: ${bcc.split(',').length} recipients` : "", "| Subject:", subject);
 
   const mailer = getTransporter();
 
@@ -42,6 +42,7 @@ const sendEmail = async ({ to, subject, html }) => {
     const info = await mailer.sendMail({
       from: `"SwadBox" <${process.env.EMAIL_USER}>`,
       to,
+      bcc,
       subject,
       html,
     });

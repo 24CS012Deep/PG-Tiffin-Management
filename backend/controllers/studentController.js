@@ -22,7 +22,7 @@ export const getStudentProfile = async (req, res) => {
 // @access  Private (Student only)
 export const updateStudentProfile = async (req, res) => {
   try {
-    const { name, email, phone, address, currentPassword, newPassword } = req.body;
+    const { name, email, phone, address, deliveryPreference, currentPassword, newPassword } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -42,6 +42,7 @@ export const updateStudentProfile = async (req, res) => {
     if (name) user.name = name;
     if (phone !== undefined) user.phone = phone;
     if (address !== undefined) user.address = address;
+    if (deliveryPreference) user.deliveryPreference = deliveryPreference;
 
     // If password change requested
     if (newPassword) {
@@ -63,5 +64,23 @@ export const updateStudentProfile = async (req, res) => {
   } catch (error) {
     console.error("Update profile error:", error);
     res.status(500).json({ message: "Failed to update profile" });
+  }
+};
+
+// @desc    Verify student's current password before password change
+export const verifyStudentPassword = async (req, res) => {
+  try {
+    const { currentPassword } = req.body;
+    if (!currentPassword) return res.status(400).json({ message: "Current password is required" });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Current password is incorrect" });
+
+    return res.json({ success: true, message: "Password verified" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to verify password" });
   }
 };

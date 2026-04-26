@@ -19,7 +19,10 @@ import {
   FiCalendar,
   FiShoppingBag,
   FiHome,
+  FiPrinter
 } from "react-icons/fi";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { MdReceiptLong } from "react-icons/md";
 
 const Billing = () => {
@@ -33,7 +36,7 @@ const Billing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sendingEmail, setSendingEmail] = useState(null);
-  
+
   // NEW: Generate Bills state
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [periodType, setPeriodType] = useState("single"); // single, last, range
@@ -114,7 +117,7 @@ const Billing = () => {
     e.preventDefault();
     if (periodType === "single" && !singleMonth) return alert("Please select a month");
     if (periodType === "range" && (!fromMonth || !toMonth)) return alert("Please select from and to months");
-    
+
     try {
       setGenerating(true);
       const payload = {
@@ -126,11 +129,18 @@ const Billing = () => {
         studentSelection,
         specificStudents: [] // Assuming all for now unless integrated with a multi-select
       };
-      
+
       const res = await API.post("/admin/billings/generate", payload);
-      
+
       setSuccess(res.data.message || `Successfully generated ${res.data.count || 0} bills`);
       setShowGenerateModal(false);
+
+      // Reset filters to show new bills
+      setStatusFilter("");
+      setTypeFilter("");
+      setSearchTerm("");
+      setCurrentPage(1);
+
       fetchBillings();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to generate bills");
@@ -139,45 +149,147 @@ const Billing = () => {
     }
   };
 
-  const generateTxtBill = (billing) => {
+  const formatMonth = (monthStr) => {
+    if (!monthStr) return "N/A";
+    if (monthStr.includes(" ")) return monthStr;
+    const [year, month] = monthStr.split("-");
+    if (year && month) {
+      const date = new Date(year, parseInt(month) - 1);
+      return date.toLocaleString("en-IN", { month: "long", year: "numeric" });
+    }
+    return monthStr;
+  };
+
+  const generatePdfBill = (billing) => {
+    const doc = new jsPDF();
     const date = new Date().toLocaleDateString("en-IN", { dateStyle: "full" });
-    const content = `
-════════════════════════════════════════════
-              SIYA PG - BILL RECEIPT
-════════════════════════════════════════════
+    const userName = billing.user?.name || "CLIENT";
+    const userEmail = billing.user?.email || "N/A";
+    
+    // Header
+    doc.setFillColor(31, 41, 55); 
+    doc.rect(0, 0, 210, 50, "F");
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(26);
+    doc.setFont("helvetica", "bold");
+    doc.text("SIYA PG", 20, 30);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("PREMIUM ACCOMMODATION & TIFFIN SERVICES", 20, 38);
+    
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(billing.type === "tiffin" ? "ORDER RECEIPT" : "MONTHLY INVOICE", 190, 35, { align: "right" });
+    
+    // Info Section
+    doc.setTextColor(31, 41, 55);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("BILL TO:", 20, 65);
+    doc.setFont("helvetica", "normal");
+    doc.text(userName.toUpperCase(), 20, 72);
+    doc.text(userEmail, 20, 77);
+    
+    if (billing.breakdown?.customerOrder?.address) {
+      doc.setFont("helvetica", "bold");
+      doc.text("DELIVERY ADDRESS:", 20, 87);
+      doc.setFont("helvetica", "normal");
+      const addr = billing.breakdown.customerOrder.address;
+      const splitAddress = doc.splitTextToSize(addr, 80);
+      doc.text(splitAddress, 20, 92);
+    }
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("INVOICE DETAILS:", 130, 65);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Invoice #: ${billing._id.substring(0, 8)}`, 130, 72);
+    doc.text(`Period: ${formatMonth(billing.month)}`, 130, 77);
+    doc.text(`Status: ${billing.status?.toUpperCase()}`, 130, 82);
+    
+    // Main Table Construction
+    const tableBody = [];
+    if (billing.breakdown?.customerOrder) {
+      const order = billing.breakdown.customerOrder;
+      tableBody.push([
+        `Tiffin Order - ${order.planNumber || 'Plan'}`,
+        `Items: ${order.items}\nQuantity: ${order.quantity}`,
+        `INR ${billing.amount?.toLocaleString("en-IN")}`
+      ]);
+    } else if (billing.breakdown) {
+      if (billing.breakdown.roomRent > 0) {
+        tableBody.push(["Room Accommodation Rent", "Monthly", `INR ${billing.breakdown.roomRent.toLocaleString("en-IN")}`]);
+      }
+      if (billing.breakdown.foodCharges > 0) {
+        const counts = billing.breakdown.mealCounts || {};
+        const mealSummary = `Breakfast: ${counts.breakfast || 0}, Lunch: ${counts.lunch || 0}, Dinner: ${counts.dinner || 0}`;
+        tableBody.push(["Tiffin & Meal Charges", mealSummary, `INR ${billing.breakdown.foodCharges.toLocaleString("en-IN")}`]);
+      }
+    } else {
+      tableBody.push([
+        billing.type?.toUpperCase() === "MONTHLY" ? "TIFFIN + ROOM (Consolidated)" : billing.type?.toUpperCase(),
+        billing.details || billing.month,
+        `INR ${billing.amount?.toLocaleString("en-IN")}`
+      ]);
+    }
+    
+    autoTable(doc, {
+      startY: 110,
+      head: [["Service Description", "Details / Period", "Subtotal"]],
+      body: tableBody,
+      theme: "grid",
+      headStyles: { fillColor: [249, 115, 22], textColor: [255, 255, 255] },
+      bodyStyles: { fontSize: 10, cellPadding: 6 },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 70 },
+        2: { halign: "right", fontStyle: "bold", cellWidth: 40 }
+      }
+    });
 
-Date Generated: ${date}
-Bill ID: ${billing._id}
+    let finalY = doc.lastAutoTable.finalY + 15;
 
-────────────────────────────────────────────
-  CUSTOMER DETAILS
-────────────────────────────────────────────
-Name:    ${billing.user?.name || "N/A"}
-Email:   ${billing.user?.email || "N/A"}
-Role:    ${billing.user?.role || "N/A"}
+    // Detailed Daily Breakdown (If available)
+    if (billing.breakdown?.dailyRecords && billing.breakdown.dailyRecords.length > 0) {
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("DAILY MEAL CONSUMPTION LOG", 20, finalY);
+      
+      const mealData = billing.breakdown.dailyRecords.map(r => [
+        `Day ${r.day}`,
+        r.breakfast ? "Y" : "-",
+        r.lunch ? "Y" : "-",
+        r.dinner ? "Y" : "-",
+        `INR ${r.dailyTotal}`
+      ]);
 
-────────────────────────────────────────────
-  BILLING DETAILS
-────────────────────────────────────────────
-Month:   ${billing.month}
-Type:    ${billing.type?.toUpperCase()}
-Amount:  ₹${billing.amount?.toLocaleString("en-IN")}
-Status:  ${billing.status?.toUpperCase()}
-${billing.paidAt ? `Paid On: ${new Date(billing.paidAt).toLocaleDateString("en-IN", { dateStyle: "long" })}` : ""}
-${billing.paymentMethod ? `Payment Method: ${billing.paymentMethod}` : ""}
-${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
-
-════════════════════════════════════════════
-  Thank you for choosing Siya PG!
-  For queries, contact administration.
-════════════════════════════════════════════
-    `;
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `Bill_${billing.user?.name}_${billing.month}.txt`;
-    link.click();
+      autoTable(doc, {
+        startY: finalY + 5,
+        head: [["Day", "Brkfst", "Lunch", "Dinner", "Daily Amt"]],
+        body: mealData,
+        theme: "striped",
+        headStyles: { fillColor: [75, 85, 99], fontSize: 8 },
+        bodyStyles: { fontSize: 8, cellPadding: 3 },
+        margin: { left: 20, right: 20 }
+      });
+      finalY = doc.lastAutoTable.finalY + 15;
+    }
+    
+    
+    // Total
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(249, 115, 22);
+    doc.text(`Grand Total: INR ${billing.amount?.toLocaleString("en-IN")}`, 190, finalY, { align: "right" });
+    
+    // Footer
+    doc.setDrawColor(229, 231, 235);
+    doc.line(20, 275, 190, 275);
+    doc.setFontSize(8);
+    doc.setTextColor(156, 163, 175);
+    doc.text("Thank you for choosing Siya PG. For queries, contact +91 XXXXX XXXXX.", 105, 282, { align: "center" });
+    
+    doc.save(`Bill_${userName}_${billing.month}.pdf`);
   };
 
   const getStatusConfig = (status) => {
@@ -192,6 +304,7 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
           label: "Paid",
         };
       case "pending":
+      case "unpaid":
         return {
           bg: "bg-amber-50",
           text: "text-amber-700",
@@ -199,15 +312,6 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
           dot: "bg-amber-500",
           icon: <FiClock className="text-xs" />,
           label: "Pending",
-        };
-      case "overdue":
-        return {
-          bg: "bg-red-50",
-          text: "text-red-700",
-          border: "border-red-200",
-          dot: "bg-red-500",
-          icon: <FiAlertTriangle className="text-xs" />,
-          label: "Overdue",
         };
       default:
         return {
@@ -231,9 +335,9 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
         };
       case "monthly":
         return {
-          bg: "bg-indigo-100",
-          text: "text-indigo-700",
-          label: <span className="flex items-center gap-1"><FiHome /><FiShoppingBag /> Combined</span>,
+          bg: "bg-orange-100",
+          text: "text-orange-700",
+          label: <span className="flex items-center gap-1"><FiHome /><FiShoppingBag /> Tiffin + Room</span>,
         };
       case "room":
         return { bg: "bg-violet-100", text: "text-violet-700", label: <span className="flex items-center gap-1"><FiHome /> Room</span> };
@@ -255,15 +359,16 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
     .filter((b) => b.status === "paid")
     .reduce((acc, b) => acc + (b.amount || 0), 0);
   const pendingAmount = billings
-    .filter((b) => b.status === "pending")
-    .reduce((acc, b) => acc + (b.amount || 0), 0);
-  const overdueAmount = billings
-    .filter((b) => b.status === "overdue")
+    .filter((b) => b.status === "pending" || b.status === "unpaid" || b.status === "overdue")
     .reduce((acc, b) => acc + (b.amount || 0), 0);
 
   // Filtering
   const filteredBillings = billings
-    .filter((b) => (statusFilter ? b.status === statusFilter : true))
+    .filter((b) => {
+      if (statusFilter === "paid") return b.status === "paid";
+      if (!statusFilter) return b.status !== "paid"; // 'Active' view excludes 'Paid'
+      return b.status === statusFilter;
+    })
     .filter((b) => (typeFilter ? b.type === typeFilter : true))
     .filter(
       (b) =>
@@ -314,11 +419,29 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
               Monthly Billing
             </h2>
             <p className="text-gray-500 text-sm mt-1">
-              Track and manage all billing records, payments, and overdue
+              Track and manage all billing records, payments, and
               accounts.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            {/* View Toggle */}
+            <div className="bg-white p-1 rounded-2xl border border-gray-100 flex shadow-sm h-fit">
+              <button
+                onClick={() => setStatusFilter("")}
+                className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${!statusFilter || statusFilter !== "paid" ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"
+                  }`}
+              >
+                <FiClock size={14} /> Active
+              </button>
+              <button
+                onClick={() => setStatusFilter("paid")}
+                className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${statusFilter === "paid" ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"
+                  }`}
+              >
+                <FiCheckCircle size={14} /> History
+              </button>
+            </div>
+
             <button
               onClick={() => setShowGenerateModal(true)}
               className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition-all shadow-md shadow-orange-200 hover:-translate-y-0.5"
@@ -330,6 +453,22 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
               className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 rounded-xl hover:bg-orange-100 transition-all"
             >
               <FiRefreshCw /> Refresh
+            </button>
+            <button
+              onClick={async () => {
+                if (window.confirm("Are you sure? This will delete all PAID bills older than 30 days.")) {
+                  try {
+                    const res = await API.post("/admin/billings/reset-history");
+                    setSuccess(res.data.message);
+                    fetchBillings();
+                  } catch (err) {
+                    setError("Failed to reset history");
+                  }
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
+            >
+              <FiTrash2 /> Reset History
             </button>
           </div>
         </div>
@@ -388,15 +527,7 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
             text: "text-amber-600",
             iconBg: "bg-amber-100",
           },
-          {
-            label: "Overdue",
-            value: `₹${overdueAmount.toLocaleString("en-IN")}`,
-            icon: <FiAlertTriangle />,
-            bg: "bg-red-50",
-            border: "border-red-200",
-            text: "text-red-600",
-            iconBg: "bg-red-100",
-          },
+
         ].map((stat, idx) => (
           <div
             key={idx}
@@ -455,7 +586,6 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                 <option value="">All Status</option>
                 <option value="paid">Paid</option>
                 <option value="pending">Pending</option>
-                <option value="overdue">Overdue</option>
               </select>
             </div>
             <select
@@ -468,8 +598,7 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
             >
               <option value="">All Types</option>
               <option value="tiffin">Tiffin Only</option>
-              <option value="room">Room Only</option>
-              <option value="monthly">Combined (Room+Food)</option>
+              <option value="monthly">Tiffin + Room</option>
             </select>
             <button
               onClick={() => {
@@ -582,7 +711,6 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                           >
                             <option value="pending">Pending</option>
                             <option value="paid">Paid</option>
-                            <option value="overdue">Overdue</option>
                           </select>
                         </div>
                         {billing.paidAt && (
@@ -614,11 +742,11 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
 
                           {/* Download */}
                           <button
-                            onClick={() => generateTxtBill(billing)}
+                            onClick={() => generatePdfBill(billing)}
                             className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Download Bill"
+                            title="Download PDF Bill"
                           >
-                            <FiDownload />
+                            <FiPrinter />
                           </button>
 
                           {/* Delete */}
@@ -701,14 +829,14 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                 </span>
                 Generate Bills
               </h3>
-              <button 
+              <button
                 onClick={() => setShowGenerateModal(false)}
                 className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors"
               >
                 <FiX className="text-xl" />
               </button>
             </div>
-            
+
             <form onSubmit={handleGenerateBills} className="p-8">
               <div className="space-y-6">
                 {/* 1. Select Billing Period Type */}
@@ -722,11 +850,10 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                         key={t.id}
                         type="button"
                         onClick={() => setPeriodType(t.id)}
-                        className={`py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all text-center ${
-                          periodType === t.id 
-                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm' 
+                        className={`py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all text-center ${periodType === t.id
+                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
                           : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         {t.label}
                       </button>
@@ -745,8 +872,8 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                   {periodType === 'single' && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Select Month</label>
-                      <input 
-                        type="month" 
+                      <input
+                        type="month"
                         required
                         value={singleMonth}
                         onChange={(e) => setSingleMonth(e.target.value)}
@@ -758,8 +885,8 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="flex-1">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">From Month</label>
-                        <input 
-                          type="month" 
+                        <input
+                          type="month"
                           required
                           value={fromMonth}
                           onChange={(e) => setFromMonth(e.target.value)}
@@ -768,8 +895,8 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                       </div>
                       <div className="flex-1">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">To Month</label>
-                        <input 
-                          type="month" 
+                        <input
+                          type="month"
                           required
                           value={toMonth}
                           onChange={(e) => setToMonth(e.target.value)}
@@ -787,19 +914,19 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                   </label>
                   <div className="flex gap-3">
                     <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-gray-100 rounded-xl flex-1 hover:bg-gray-50 transition-colors">
-                      <input 
-                        type="radio" 
-                        name="studentSel" 
-                        checked={studentSelection === "all"} 
+                      <input
+                        type="radio"
+                        name="studentSel"
+                        checked={studentSelection === "all"}
                         onChange={() => setStudentSelection("all")}
                         className="w-4 h-4 text-orange-500 focus:ring-orange-500"
                       />
                       <span className="font-semibold text-sm text-gray-700">All Active Students</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-gray-100 rounded-xl flex-1 hover:bg-gray-50 transition-colors opacity-60">
-                      <input 
-                        type="radio" 
-                        name="studentSel" 
+                      <input
+                        type="radio"
+                        name="studentSel"
                         disabled
                         className="w-4 h-4 text-orange-500 focus:ring-orange-500"
                       />
@@ -813,41 +940,26 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                   <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <FiShoppingBag className="text-orange-500" /> 3. Bill Content
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setGenerateType('monthly')}
-                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
-                        generateType === 'monthly' 
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm' 
+                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${generateType === 'monthly'
+                        ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
                         : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <div className="flex gap-1"><FiHome /><FiShoppingBag /></div>
-                      Combined
-                      <span className="text-[10px] font-normal uppercase tracking-wider">Room + Food</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setGenerateType('room')}
-                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
-                        generateType === 'room' 
-                        ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' 
-                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      <FiHome className={generateType === 'room' ? 'text-blue-500' : ''} />
-                      Room Only
-                      <span className="text-[10px] font-normal uppercase tracking-wider">Fixed Rent</span>
+                      Tiffin + Room
+                      <span className="text-[10px] font-normal uppercase tracking-wider">Rent + Food</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setGenerateType('tiffin')}
-                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${
-                        generateType === 'tiffin' 
-                        ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm' 
+                      className={`py-3 px-4 rounded-xl border-2 font-bold text-sm flex flex-col items-center justify-center gap-1 transition-all ${generateType === 'tiffin'
+                        ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
                         : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <FiShoppingBag className={generateType === 'tiffin' ? 'text-orange-500' : ''} />
                       Tiffin Only
@@ -856,7 +968,7 @@ ${billing.transactionId ? `Transaction ID: ${billing.transactionId}` : ""}
                   </div>
                 </div>
               </div>
-              
+
               {/* Footer Actions */}
               <div className="mt-8 pt-6 border-t border-gray-100 flex gap-4">
                 <button

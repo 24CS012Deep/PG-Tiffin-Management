@@ -7,7 +7,8 @@ import {
   FiUser, 
   FiLogOut,
   FiMenu,
-  FiX
+  FiX,
+  FiClock
 } from "react-icons/fi";
 import { MdReceiptLong, MdOutlineSupportAgent } from "react-icons/md";
 
@@ -59,7 +60,7 @@ const CustomerSidebar = () => {
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-orange-500">SwadBox</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-[#FF6B00]">SwadBox</h2>
           <p className="text-xs text-gray-400 mb-6 md:mb-8">CUSTOMER PANEL</p>
           <div className="space-y-1 md:space-y-2">
             {menu.map((item) => {
@@ -71,7 +72,7 @@ const CustomerSidebar = () => {
                   onClick={handleLinkClick}
                   className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg font-medium transition text-sm md:text-base whitespace-nowrap md:whitespace-normal ${
                     location.pathname === item.path
-                      ? "bg-orange-500 text-white"
+                      ? "bg-[#FF6B00] text-white"
                       : "text-gray-600 hover:bg-orange-50"
                   }`}
                 >

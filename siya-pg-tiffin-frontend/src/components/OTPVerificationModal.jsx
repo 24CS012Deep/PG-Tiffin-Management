@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../utils/api';
-import { FiX, FiAlertTriangle } from 'react-icons/fi';
+import { FiX, FiAlertTriangle, FiKey, FiCheckCircle } from 'react-icons/fi';
 
 const OTPVerificationModal = ({ order, onClose, onSuccess }) => {
   const [otp, setOtp] = useState('');
@@ -14,7 +14,6 @@ const OTPVerificationModal = ({ order, onClose, onSuccess }) => {
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
-    
     if (!otp || otp.length !== 6) {
       setError('Please enter a 6-digit OTP');
       return;
@@ -24,8 +23,6 @@ const OTPVerificationModal = ({ order, onClose, onSuccess }) => {
     setError('');
 
     try {
-      // ✅ FIX: Was hardcoded to /customer/orders/verify-otp — students could never verify OTP.
-      // Now detects the logged-in user's role and calls the correct endpoint.
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const role = user.role || 'customer';
       const endpoint = `/${role}/orders/verify-otp`;
@@ -44,96 +41,76 @@ const OTPVerificationModal = ({ order, onClose, onSuccess }) => {
     }
   };
 
-
-  // Check if OTP has expired (warning only, backend allows it now)
   const isOtpExpired = order.otpExpiresAt && new Date() > new Date(order.otpExpiresAt);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
+      
+      <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-[0_30px_100px_rgba(0,0,0,0.2)] animate-in zoom-in-95 duration-300 relative z-10 border border-white/20">
         {/* Header */}
-        <div className="bg-orange-500 text-white p-4 rounded-t-lg flex justify-between items-center">
-          <h3 className="text-lg font-bold">Verify Delivery OTP</h3>
-          <button
+        <div className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] p-8 text-white relative">
+          <button 
             onClick={onClose}
-            className="text-white hover:bg-orange-600 rounded-lg p-1 transition-colors"
+            className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition-all backdrop-blur-sm"
           >
             <FiX size={20} />
           </button>
+          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm border border-white/20">
+            <FiKey size={24} />
+          </div>
+          <h3 className="text-2xl font-black tracking-tight uppercase">Verify Delivery</h3>
+          <p className="text-orange-100 text-[10px] font-bold uppercase tracking-widest mt-1 opacity-80">Order #{order._id.slice(-6)}</p>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          {/* Order Info */}
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
-              <strong>Plan:</strong> {order.tiffinPlan?.name}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              <strong>Delivery Status:</strong>{' '}
-              <span className="text-green-600 font-semibold">Delivered</span>
-            </p>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
+        <div className="p-8">
+          {/* Status Message */}
+          {error ? (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-500">
+              <FiAlertTriangle className="flex-shrink-0" />
+              <p className="text-[10px] font-bold uppercase tracking-wider leading-tight">{error}</p>
+            </div>
+          ) : isOtpExpired ? (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3 text-orange-500">
+              <FiAlertTriangle className="flex-shrink-0" />
+              <p className="text-[10px] font-bold uppercase tracking-wider leading-tight">OTP Expired. Verification may fail.</p>
+            </div>
+          ) : (
+            <div className="mb-6 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Customer</p>
+              <p className="text-sm font-black text-slate-800 uppercase">{order.customer?.name || "Guest"}</p>
             </div>
           )}
 
-          {/* Expired OTP Message */}
-          {isOtpExpired && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
-              <FiAlertTriangle className="text-yellow-600 mt-0.5" />
-              <p className="text-yellow-700 text-sm">
-                <strong>OTP Expired:</strong> You can still try to verify it, but it's recommended to contact support if it fails.
-              </p>
-            </div>
-          )}
-
-          {/* OTP Form */}
-          <form onSubmit={handleVerifyOTP} className="space-y-4">
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">
+          {/* OTP Input Form */}
+          <form onSubmit={handleVerifyOTP} className="space-y-6">
+            <div className="text-center">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
                 Enter 6-Digit OTP
               </label>
               <input
                 type="text"
                 maxLength="6"
-                placeholder="000000"
+                placeholder="••••••"
                 value={otp}
                 onChange={handleOtpChange}
                 disabled={loading}
-                className="w-full px-4 py-2 text-center text-2xl font-bold tracking-widest border-2 border-orange-300 rounded-lg focus:outline-none focus:border-orange-500"
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-5 text-center text-3xl font-black tracking-[0.4em] text-slate-800 focus:border-[#FF6B00] focus:bg-white outline-none transition-all placeholder:text-slate-200"
                 autoFocus
               />
-              <p className="text-gray-500 text-xs mt-1">
-                Entered: {otp.length}/6 digits
-              </p>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || otp.length !== 6}
-              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white font-semibold py-2 rounded-lg transition"
+              className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#FF6B00] hover:shadow-xl hover:shadow-orange-100 transition-all disabled:opacity-50 disabled:hover:bg-slate-900 active:scale-[0.98] flex items-center justify-center gap-3"
             >
-              {loading ? 'Verifying...' : 'Verify OTP'}
+              {loading ? "Verifying..." : <><FiCheckCircle /> Verify & Complete</>}
             </button>
           </form>
 
-          {/* Cancel Button */}
-          <button
-            onClick={onClose}
-            className="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition"
-          >
-            Cancel
-          </button>
-
-          {/* Info */}
-          <p className="text-gray-500 text-xs mt-3 text-center">
-            OTP is valid for 15 minutes from delivery
+          <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-6 text-center">
+            Valid share with delivery staff only
           </p>
         </div>
       </div>

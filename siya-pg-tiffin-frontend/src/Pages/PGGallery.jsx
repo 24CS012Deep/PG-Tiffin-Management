@@ -68,10 +68,9 @@ const pgPhotos = [
 
 const amenities = [
   { icon: faBed, name: "Comfortable Beds" },
-  { icon: faShower, name: "Attached Washrooms" },
+  { icon: faShower, name: "Washrooms" },
   { icon: faUtensils, name: "Home-Cooked Meals" },
   { icon: faSnowflake, name: "Air Conditioning" },
-  { icon: faWifi, name: "High Speed WiFi" },
 ];
 
 export default function PGGallery() {
@@ -249,7 +248,7 @@ export default function PGGallery() {
             </div>
             
             {/* Features Row */}
-            <div className="mt-24 grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8">
               {amenities.map((amenity, index) => (
                 <div key={index} className="bg-white rounded-2xl p-6 text-center shadow-sm border border-orange-50 hover:shadow-md hover:border-orange-200 transition-all group">
                   <div className="w-14 h-14 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-500 group-hover:scale-110 transition-all">
@@ -272,12 +271,10 @@ export default function PGGallery() {
                    <p className="text-gray-400 text-lg font-medium">Experience student living that feels exactly like home. Book your visit today.</p>
                  </div>
                  <div className="flex gap-4 w-full md:w-auto">
-                   <button onClick={() => setShowContactModal(true)} className="flex-1 md:flex-none border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-8 py-4 rounded-xl font-bold transition-all">
-                     Call Us
-                   </button>
-                   <button onClick={() => setShowScheduleModal(true)} className="flex-1 md:flex-none bg-orange-500 text-white px-8 py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition-colors">
-                     Reserve Room
-                   </button>
+                   <a href="tel:+919904372800" className="flex-1 md:flex-none bg-orange-500 text-white px-8 py-4 rounded-xl font-bold shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:bg-orange-600 transition-all flex flex-col items-center justify-center min-w-[200px]">
+                     <span className="text-[10px] uppercase tracking-widest opacity-70 mb-1">Call Us Directly</span>
+                     <span className="text-xl">+91 99043 72800</span>
+                   </a>
                  </div>
                </div>
             </div>

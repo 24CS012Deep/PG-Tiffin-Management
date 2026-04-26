@@ -18,7 +18,7 @@ const orderSchema = new mongoose.Schema({
   items: [String],
   status: { 
     type: String, 
-    enum: ["live", "completed", "cancelled"], 
+    enum: ["live", "completed", "cancelled", "inactive"], 
     default: "live" 
   },
   quantity: {
@@ -31,14 +31,21 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ["pending", "paid", "failed"],
+    enum: ["pending", "unpaid", "paid", "failed"],
     default: "pending"
   },
-  deliveryAddress: String,
+  paymentVerified: {
+    type: Boolean,
+    default: false
+  },
+  deliveryAddress: {
+    type: String,
+    required: true
+  },
   deliveryTime: {
     type: String,
-    enum: ["breakfast", "lunch", "dinner", "both"],
-    default: "both"
+    enum: ["lunch", "dinner", "both"],
+    default: "lunch"
   },
   specialInstructions: String,
   // OTP verification fields
@@ -63,9 +70,6 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "delivered", "verified"],
     default: "pending"
   },
-  // ✅ FIX: Removed manual createdAt/updatedAt fields.
-  // Using timestamps:true below so Mongoose auto-manages them reliably.
-  // This fixes the canCancelOrder() bug where order.createdAt was sometimes null.
 }, { timestamps: true });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);

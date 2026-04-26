@@ -62,88 +62,102 @@ export const generateBills = async (req, res) => {
       const startOfMonth = new Date(yearStr, parseInt(monthStr) - 1, 1);
       const endOfMonth = new Date(yearStr, parseInt(monthStr), 0);
 
+      // --- FETCH ALL RELEVANT STUDENTS ---
+      let allTargetStudents = [];
+      if (studentSelection === "all") {
+        allTargetStudents = await User.find({ role: { $in: ["student", "customer"] }, isBlocked: false });
+      } else if (studentSelection === "specific" && specificStudents?.length > 0) {
+        allTargetStudents = await User.find({ _id: { $in: specificStudents } });
+      }
+
       // --- TIFFIN LOGIC ---
+      let userTotals = {};
       if (type === "tiffin" || type === "monthly") {
         const orderQuery = {
           createdAt: { $gte: startOfMonth, $lte: endOfMonth },
           status: "completed"
         };
-        if (studentSelection === "specific" && specificStudents?.length > 0) {
-          orderQuery.customer = { $in: specificStudents };
-        }
-
-        const orders = await Order.find(orderQuery).populate("customer");
-        const userTotals = {};
+        
+        const orders = await Order.find(orderQuery);
         for (const order of orders) {
-          const customerId = order.customer?._id?.toString();
+          const customerId = order.customer?.toString();
           if (customerId) {
-            if (!userTotals[customerId]) userTotals[customerId] = 0;
-            userTotals[customerId] += order.totalAmount || 0;
+            userTotals[customerId] = (userTotals[customerId] || 0) + (order.totalAmount || 0);
           }
         }
 
         if (type === "tiffin") {
-          for (const [userId, amt] of Object.entries(userTotals)) {
-            const existingBill = await Billing.findOne({ user: userId, month, type: "tiffin" });
-            if (!existingBill) {
-              await Billing.create({
-                user: userId, month, amount: amt, type: "tiffin",
-                status: "pending", details: `Tiffin bills for ${month}`
-              });
-              createdCount++;
+          for (const student of allTargetStudents) {
+            const userId = student._id.toString();
+            const amt = userTotals[userId] || 0;
+            if (amt > 0) {
+              const existingBill = await Billing.findOne({ user: userId, month, type: "tiffin" });
+              if (!existingBill) {
+                await Billing.create({
+                  user: userId, month, amount: amt, type: "tiffin",
+                  status: "pending", details: `Tiffin bills for ${month}`
+                });
+                createdCount++;
+              }
             }
           }
-        } else if (type === "monthly") {
-          // Monthly handles tiffin later, merged with room
-          req.tempTiffinTotals = req.tempTiffinTotals || {};
-          req.tempTiffinTotals[month] = userTotals;
         }
       }
 
       // --- ROOM LOGIC ---
+      let userRooms = {};
       if (type === "room" || type === "monthly") {
-        const rooms = await Room.find({ students: { $exists: true, $not: { $size: 0 } } });
-        const userRooms = {};
+        const rooms = await Room.find({}).populate("students");
+        
+        // Map users to their rooms
         for (const room of rooms) {
-          for (const studentId of room.students) {
-            const sId = studentId.toString();
-            if (studentSelection === "specific" && specificStudents && !specificStudents.includes(sId)) {
-              continue; // Skip if not in specific list
+          // Method 1: From Room's students array
+          if (room.students && room.students.length > 0) {
+            for (const student of room.students) {
+              const sId = student._id?.toString() || student.toString();
+              userRooms[sId] = { rent: room.rent || 5000, roomNumber: room.roomNumber };
             }
-            userRooms[sId] = { rent: room.rent || 5000, roomNumber: room.roomNumber };
+          }
+        }
+
+        // Method 2: Fallback for students who have roomNumber set but aren't in the Room array
+        for (const student of allTargetStudents) {
+          const sId = student._id.toString();
+          if (!userRooms[sId] && student.roomNumber) {
+            const studentRoom = rooms.find(r => r.roomNumber === student.roomNumber);
+            if (studentRoom) {
+              userRooms[sId] = { rent: studentRoom.rent || 5000, roomNumber: studentRoom.roomNumber };
+            }
           }
         }
 
         if (type === "room") {
-          for (const [userId, roomData] of Object.entries(userRooms)) {
-            const existingBill = await Billing.findOne({ user: userId, month, type: "room" });
-            if (!existingBill) {
-              await Billing.create({
-                user: userId, month, amount: roomData.rent, type: "room",
-                status: "pending", details: `Room Rent for ${month} (Room: ${roomData.roomNumber})`
-              });
-              createdCount++;
+          for (const student of allTargetStudents) {
+            const userId = student._id.toString();
+            const roomData = userRooms[userId];
+            if (roomData) {
+              const existingBill = await Billing.findOne({ user: userId, month, type: "room" });
+              if (!existingBill) {
+                await Billing.create({
+                  user: userId, month, amount: roomData.rent, type: "room",
+                  status: "pending", details: `Room Rent for ${month} (Room: ${roomData.roomNumber})`
+                });
+                createdCount++;
+              }
             }
           }
         } else if (type === "monthly") {
-          // Merge Tiffin + Room
-          const tiffinData = (req.tempTiffinTotals && req.tempTiffinTotals[month]) || {};
-          // Users who have room rent OR tiffin
-          const allUserIds = new Set([...Object.keys(userRooms), ...Object.keys(tiffinData)]);
+          for (const student of allTargetStudents) {
+            const userId = student._id.toString();
+            const roomData = userRooms[userId];
+            const tAmt = userTotals[userId] || 0;
+            const rAmt = roomData?.rent || 0;
 
-          for (const userId of allUserIds) {
-            if (studentSelection === "specific" && specificStudents && !specificStudents.includes(userId)) {
-              continue;
-            }
-            const existingBill = await Billing.findOne({ user: userId, month, type: "monthly" });
-            if (!existingBill) {
-              const rAmt = userRooms[userId]?.rent || 0;
-              const tAmt = tiffinData[userId] || 0;
-              const rNum = userRooms[userId]?.roomNumber;
-
-              if (rAmt > 0 || tAmt > 0) {
+            if (rAmt > 0 || tAmt > 0) {
+              const existingBill = await Billing.findOne({ user: userId, month, type: "monthly" });
+              if (!existingBill) {
                 let detailsArr = [];
-                if (rAmt > 0) detailsArr.push(`Room Rent (Room: ${rNum || 'N/A'}): ₹${rAmt}`);
+                if (rAmt > 0) detailsArr.push(`Room Rent (Room: ${roomData?.roomNumber || 'Assigned'}): ₹${rAmt}`);
                 if (tAmt > 0) detailsArr.push(`Daily Food: ₹${tAmt}`);
 
                 await Billing.create({
@@ -182,6 +196,24 @@ export const updateBillingStatus = async (req, res) => {
     ).populate("user");
 
     if (!billing) return res.status(404).json({ message: "Billing not found" });
+
+    // --- SYNC WITH MEAL RECORDS (IF TYPE IS TIFFIN) ---
+    if (billing.type === "tiffin") {
+      try {
+        const MealRecord = (await import("../models/MealRecord.js")).default;
+        await MealRecord.findOneAndUpdate(
+          { student: billing.user._id || billing.user, month: billing.month },
+          { 
+            paymentStatus: status,
+            paymentMethod,
+            transactionId,
+            paidAt: status === "paid" ? new Date() : null
+          }
+        );
+      } catch (mealErr) {
+        console.error("Failed to sync billing status with meal record:", mealErr.message);
+      }
+    }
 
     // Send email notification if status changed to paid
     if (status === "paid" && billing.user?.email) {
@@ -255,8 +287,8 @@ export const sendBillEmail = async (req, res) => {
     if (!billing) return res.status(404).json({ message: "Billing not found" });
     if (!billing.user?.email) return res.status(400).json({ message: "User email not found" });
 
-    const statusColor = billing.status === "paid" ? "#16a34a" : billing.status === "overdue" ? "#dc2626" : "#ca8a04";
-    const statusLabel = billing.status === "paid" ? "✅ Paid" : billing.status === "overdue" ? "⚠️ Overdue" : "⏳ Pending";
+    const statusColor = billing.status === "paid" ? "#16a34a" : "#ca8a04";
+    const statusLabel = billing.status === "paid" ? "✅ Paid" : "⏳ Pending";
 
     await sendEmail({
       to: billing.user.email,
@@ -317,5 +349,27 @@ export const deleteBilling = async (req, res) => {
     res.json({ success: true, message: "Billing deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete billing" });
+  }
+};
+
+/* ================= RESET OLD HISTORY ================= */
+export const resetOldHistory = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Delete paid bills older than 30 days
+    const result = await Billing.deleteMany({
+      status: "paid",
+      paidAt: { $lt: thirtyDaysAgo }
+    });
+
+    res.json({ 
+      success: true, 
+      message: `Successfully cleared ${result.deletedCount} old history records.` 
+    });
+  } catch (error) {
+    console.error("Reset history error:", error);
+    res.status(500).json({ message: "Failed to reset history" });
   }
 };

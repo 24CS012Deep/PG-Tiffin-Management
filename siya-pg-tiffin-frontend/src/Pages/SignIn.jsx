@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../utils/api";
-import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowLeft } from "react-icons/fi";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -54,7 +54,12 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Back to Home Button in Top Left Corner */}
+      <Link to="/" className="fixed top-4 left-4 md:top-8 md:left-8 flex items-center gap-2 bg-white px-5 py-2.5 rounded-xl shadow-lg shadow-orange-100 text-orange-600 font-bold text-xs uppercase tracking-widest hover:bg-orange-50 transition-all active:scale-95 group z-50">
+        <FiArrowLeft className="group-hover:-translate-x-1 transition-transform text-lg" /> Back to Home
+      </Link>
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">Welcome Back</h2>
         <p className="text-center text-xs sm:text-sm text-gray-600">

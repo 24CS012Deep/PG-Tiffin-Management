@@ -17,13 +17,15 @@ router.get("/stats", async (req, res) => {
       Order.countDocuments()
     ]);
 
+    const vacancy = Math.max(0, 7 - totalStudents);
+
     res.json({
       success: true,
       stats: {
-        students: totalStudents > 0 ? totalStudents : "50+",
+        students: totalStudents,
         customers: totalCustomers > 0 ? totalCustomers : "100+",
         rooms: totalRooms > 0 ? totalRooms : "20+",
-        mealsDelivered: totalOrders > 0 ? totalOrders * 30 : "10k+", // Simplified multiple
+        vacancy: vacancy,
         plans: totalPlans
       }
     });
@@ -38,27 +40,29 @@ router.get("/todays-menu", async (req, res) => {
   try {
     const today = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     
-    // Find all active plans
     const plans = await TiffinPlan.find({ isActive: true });
     
-    // Filter to only return plans that have menu items for today
-    const todaysMenuPlans = plans.filter(plan => {
-      const menuForToday = plan.menu?.find(m => m.date === today);
-      return menuForToday && menuForToday.items && menuForToday.items.length > 0;
-    }).map(plan => {
-      const menuForToday = plan.menu?.find(m => m.date === today);
+    const formattedPlans = plans.map(plan => {
+      // Check if plan date matches today or if it's a general plan
+      const isToday = plan.date === today;
+      
+      // Split items by newline or comma
+      const itemsArray = plan.items ? plan.items.split(/[,\n]/).filter(item => item.trim() !== "") : [];
+      
       return {
         _id: plan._id,
-        name: plan.name,
-        price: plan.price,
-        items: menuForToday.items
+        name: plan.name || plan.planNumber,
+        price: plan.price || plan.tiffinPrice,
+        items: itemsArray,
+        isMenuSet: itemsArray.length > 0,
+        isToday: isToday
       };
     });
 
     res.json({
       success: true,
       date: today,
-      menus: todaysMenuPlans
+      menus: formattedPlans
     });
   } catch (error) {
     console.error("Public menu error:", error);

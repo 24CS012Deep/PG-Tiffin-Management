@@ -106,12 +106,11 @@ export const getReportsData = async (req, res) => {
     const totalPending = allBillings
       .filter((b) => b.status === "pending")
       .reduce((sum, b) => sum + (b.amount || 0), 0);
-    const totalOverdue = allBillings
-      .filter((b) => b.status === "overdue")
-      .reduce((sum, b) => sum + (b.amount || 0), 0);
+
+
     const paidBillsCount = allBillings.filter((b) => b.status === "paid").length;
     const pendingBillsCount = allBillings.filter((b) => b.status === "pending").length;
-    const overdueBillsCount = allBillings.filter((b) => b.status === "overdue").length;
+
     const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0;
 
     // ── Query Stats ─────────────────────────────────────────
@@ -254,10 +253,8 @@ export const getReportsData = async (req, res) => {
         totalBilled,
         totalPaid,
         totalPending,
-        totalOverdue,
         paidCount: paidBillsCount,
         pendingCount: pendingBillsCount,
-        overdueCount: overdueBillsCount,
         collectionRate,
       },
       queries: {

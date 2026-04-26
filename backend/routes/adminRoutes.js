@@ -5,7 +5,8 @@ import {
   createTiffinPlan,
   updateTiffinPlan,
   deleteTiffinPlan,
-  setTodaysMenu
+  setTodaysMenu,
+  getTiffinHistory
 } from "../controllers/tiffinController.js";
 
 import {
@@ -22,7 +23,8 @@ import {
   updateOrderStatus,
   deleteOrder,
   sendOrderOTP,
-  verifyOrderOTP
+  verifyOrderOTP,
+  verifyPayment
 } from "../controllers/orderController.js";
 
 import {
@@ -30,7 +32,8 @@ import {
   generateBills,
   updateBillingStatus,
   deleteBilling,
-  sendBillEmail
+  sendBillEmail,
+  resetOldHistory
 } from "../controllers/billingController.js";
 
 import {
@@ -90,6 +93,7 @@ router.get("/tiffin-plans", protect, adminOnly, getTiffinPlans);
 router.post("/tiffin-plans", protect, adminOnly, createTiffinPlan);
 router.put("/tiffin-plans/:id", protect, adminOnly, updateTiffinPlan);
 router.delete("/tiffin-plans/:id", protect, adminOnly, deleteTiffinPlan);
+router.get("/tiffin-plans/history", protect, adminOnly, getTiffinHistory);
 router.post("/tiffin-plans/set-menu", protect, adminOnly, setTodaysMenu);
 
 // Room Routes
@@ -105,11 +109,13 @@ router.get("/orders", protect, adminOnly, getAllOrders);
 router.put("/orders/:id/status", protect, adminOnly, updateOrderStatus);
 router.post("/orders/:id/send-otp", protect, adminOnly, sendOrderOTP);
 router.post("/orders/verify-otp", protect, adminOnly, verifyOrderOTP);
+router.post("/orders/verify-payment", protect, adminOnly, verifyPayment);
 router.delete("/orders/:id", protect, adminOnly, deleteOrder);
 
 // Billing Routes
 router.get("/billings", protect, adminOnly, getAllBillings);
 router.post("/billings/generate", protect, adminOnly, generateBills);
+router.post("/billings/reset-history", protect, adminOnly, resetOldHistory);
 
 // Bill Generation Report Routes — MUST come before /:id routes!
 router.post("/billings/generate-report", protect, adminOnly, generateBillReport);
@@ -125,38 +131,7 @@ router.get("/queries", protect, adminOnly, getAllQueries);
 router.put("/queries/:id/answer", protect, adminOnly, answerQuery);
 router.delete("/queries/:id", protect, adminOnly, deleteQuery);
 
-// Test Email Route (for debugging SMTP configuration)
-router.post("/test-email", protect, adminOnly, async (req, res) => {
-  try {
-    const sendEmail = (await import("../utils/sendEmail.js")).default;
-    const { email } = req.body;
-    const target = email || req.user.email;
 
-    await sendEmail({
-      to: target,
-      subject: "✅ SwadBox Test Email",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 2px solid #f97316; border-radius: 10px;">
-          <h2 style="color: #f97316;">✅ SMTP Configuration Working!</h2>
-          <p>This is a test email from SwadBox admin panel.</p>
-          <p>If you're receiving this, your email configuration is correct.</p>
-          <hr>
-          <p style="color: #999; font-size: 12px;">Sent at: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
-        </div>
-      `
-    });
-
-    res.json({ success: true, message: `Test email sent to ${target}` });
-  } catch (error) {
-    console.error("❌ Test email failed:", error);
-    res.status(500).json({
-      success: false,
-      message: "Email failed to send",
-      error: error.message,
-      hint: "Check EMAIL_USER / EMAIL_PASS in .env — Gmail requires an App Password (not your account password). See: https://myaccount.google.com/apppasswords"
-    });
-  }
-});
 
 // Meal Tracking & Bill Generation Routes
 router.get("/meals/students", protect, adminOnly, getPGStudents);

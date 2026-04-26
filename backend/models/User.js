@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
     phone: String,
     deliveryPreference: {
       type: String,
-      enum: ["lunch", "dinner", "both"],
+      enum: ["breakfast", "lunch", "dinner", "both"],
       default: "both"
     }
   },

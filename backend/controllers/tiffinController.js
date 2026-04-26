@@ -1,30 +1,33 @@
 import TiffinPlan from "../models/TiffinPlan.js";
 import Order from "../models/Order.js";
+import { notifyCustomersOfNewMenu } from "../utils/notifyCustomers.js";
 
 /* ================= CREATE TIFFIN PLAN ================= */
 export const createTiffinPlan = async (req, res) => {
   try {
-    const { name, price, description, photo, maxCustomers, type, mealTypes, targetDate, cutOffTime } = req.body;
-
-    console.log("📝 Creating tiffin plan with:", { name, price, type, mealTypes, targetDate, cutOffTime });
+    console.log("📝 Creating Tiffin Plan:", req.body);
+    console.log("👤 By User:", req.user);
+    const { planNumber, tiffinPrice, maxCapacity, date, description, items, isActive, mealShifts } = req.body;
 
     const plan = await TiffinPlan.create({
-      name,
-      price,
+      planNumber,
+      tiffinPrice,
+      maxCapacity: maxCapacity || 50,
+      date,
       description,
-      photo: photo || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
-      maxCustomers: maxCustomers || 50,
-      currentCustomers: 0,
-      type: type || "veg",
-      mealTypes: mealTypes || ["lunch", "dinner"],
-      targetDate: targetDate || "",
-      cutOffTime: cutOffTime || "",
-      createdBy: req.user.id,
-      isActive: true,
-      menu: []
+      items: items || "",
+      isActive: isActive !== undefined ? isActive : true,
+      mealShifts: mealShifts || ["lunch"],
+      createdBy: req.user.id
     });
 
     console.log("✅ Plan created successfully:", plan._id);
+    
+    // Notify customers after 1 minute if plan is active
+    if (plan.isActive) {
+      notifyCustomersOfNewMenu(plan);
+    }
+
     res.status(201).json(plan);
   } catch (error) {
     console.error("❌ Create plan error:", error);
@@ -35,49 +38,103 @@ export const createTiffinPlan = async (req, res) => {
 /* ================= GET ALL TIFFIN PLANS ================= */
 export const getTiffinPlans = async (req, res) => {
   try {
-    console.log("📋 Fetching tiffin plans...");
+    const { activeOnly } = req.query;
+    let filter = {};
     
-    const plans = await TiffinPlan.find()
-      .populate("createdBy", "name")
-      .lean()
-      .sort("-createdAt");
-    
-    console.log(`✅ Found ${plans.length} tiffin plans`);
-    
-    if (plans.length === 0) {
-      console.log("⚠️  No tiffin plans found in database");
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (activeOnly === 'true') {
+      filter = { 
+        isActive: true,
+        date: { $gte: todayStr }
+      };
+    } else {
+      // For Admin, show plans from today onwards by default, but allow showing all
+      filter = { date: { $gte: todayStr } };
     }
     
-    // Ensure all plans have the required fields
-    const processedPlans = plans.map(plan => ({
-      ...plan,
-      isActive: plan.isActive !== false,
-      currentCustomers: plan.currentCustomers || 0,
-      maxCustomers: plan.maxCustomers || 50,
-      type: plan.type || "veg",
-      mealTypes: plan.mealTypes || ["lunch", "dinner"],
-      menu: plan.menu || []
+    const plans = await TiffinPlan.find(filter)
+      .populate("createdBy", "name")
+      .sort("date"); // Sort by date ascending for active plans
+    
+    // Calculate orders count for each plan
+    const plansWithCounts = await Promise.all(plans.map(async (plan) => {
+      const ordersCount = await Order.countDocuments({ 
+        tiffinPlan: plan._id, 
+        status: { $ne: "cancelled" } 
+      });
+      return { ...plan.toObject(), ordersCount };
     }));
     
-    res.json(processedPlans);
+    res.json(plansWithCounts);
   } catch (error) {
     console.error("❌ Get plans error:", error);
     res.status(500).json({ message: "Failed to fetch plans", error: error.message });
   }
 };
 
+/* ================= GET TIFFIN HISTORY ================= */
+export const getTiffinHistory = async (req, res) => {
+  try {
+    console.log("📜 Fetching Tiffin History...");
+    const todayStr = new Date().toISOString().split('T')[0];
+    const plans = await TiffinPlan.find({ date: { $lt: todayStr } })
+      .populate("createdBy", "name")
+      .sort("-date")
+      .lean();
+    
+    const historyPlans = await Promise.all(plans.map(async (plan) => {
+      const ordersCount = await Order.countDocuments({ tiffinPlan: plan._id, status: "completed" });
+      const cancelledCount = await Order.countDocuments({ tiffinPlan: plan._id, status: "cancelled" });
+      const totalRevenue = ordersCount * plan.tiffinPrice;
+      return { ...plan, ordersCount, cancelledCount, totalRevenue };
+    }));
+    
+    res.json(historyPlans);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch tiffin history" });
+  }
+};
+
+/* ================= GET TIFFIN HISTORY (CUSTOMER) ================= */
+export const getTiffinHistoryForCustomer = async (req, res) => {
+  try {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const plans = await TiffinPlan.find({ date: { $lt: todayStr } })
+      .select("-totalRevenue") // Hide revenue from customers
+      .sort("-date")
+      .lean();
+    
+    const historyPlans = await Promise.all(plans.map(async (plan) => {
+      const ordersCount = await Order.countDocuments({ tiffinPlan: plan._id, status: "completed" });
+      return { ...plan, ordersCount };
+    }));
+    
+    res.json(historyPlans);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch tiffin history" });
+  }
+};
+
 /* ================= UPDATE TIFFIN PLAN ================= */
 export const updateTiffinPlan = async (req, res) => {
   try {
-    const { name, price, description, photo, maxCustomers, type, mealTypes, isActive, targetDate, cutOffTime } = req.body;
+    const { planNumber, tiffinPrice, maxCapacity, date, description, items, isActive, mealShifts } = req.body;
     
     const plan = await TiffinPlan.findByIdAndUpdate(
       req.params.id,
-      { name, price, description, photo, maxCustomers, type, mealTypes, isActive, targetDate, cutOffTime },
+      { planNumber, tiffinPrice, maxCapacity, date, description, items, isActive, mealShifts },
       { new: true }
     );
 
     if (!plan) return res.status(404).json({ message: "Plan not found" });
+
+    // Notify customers if the plan just became active or was updated while active
+    // (Wait: maybe only if it just became active? Or any change to items?)
+    // The user said "when the admin created the plan then active".
+    if (plan.isActive) {
+      notifyCustomersOfNewMenu(plan);
+    }
+
     res.json(plan);
   } catch (error) {
     res.status(500).json({ message: "Failed to update plan" });
@@ -102,36 +159,19 @@ export const deleteTiffinPlan = async (req, res) => {
   }
 };
 
-/* ================= SET MENU FOR DATE ================= */
+/* ================= SET MENU FOR DATE (DEPRECATED) ================= */
 export const setTodaysMenu = async (req, res) => {
   try {
     const { planId, items, date } = req.body;
-    
-    // Provide a fallback to today in local timezone using a reliable method.
-    // NOTE: The old formula `getTime() - (getTimezoneOffset() * 60000)` is WRONG for UTC+ zones
-    // because getTimezoneOffset() returns a NEGATIVE value for IST (UTC+5:30), making it add time.
-    // Instead, we directly read the local date parts from the Date object.
-    const now = new Date();
-    const localYear = now.getFullYear();
-    const localMonth = String(now.getMonth() + 1).padStart(2, '0');
-    const localDay = String(now.getDate()).padStart(2, '0');
-    const targetDate = date || `${localYear}-${localMonth}-${localDay}`;
-    
     const plan = await TiffinPlan.findById(planId);
     if (!plan) return res.status(404).json({ message: "Plan not found" });
 
-    const existingMenuIndex = plan.menu.findIndex(m => m.date === targetDate);
-    if (existingMenuIndex >= 0) {
-      plan.menu[existingMenuIndex].items = items;
-    } else {
-      plan.menu.push({ date: targetDate, items });
-    }
+    plan.items = Array.isArray(items) ? items.join(", ") : items;
+    plan.date = date || plan.date;
     
     await plan.save();
-
-    res.json({ success: true, plan, date: targetDate, items });
+    res.json({ success: true, plan });
   } catch (error) {
-    console.error("Set menu error:", error);
     res.status(500).json({ message: "Failed to set menu" });
   }
 };

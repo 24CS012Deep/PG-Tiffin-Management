@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { 
   FiHome, FiUsers, FiBox, FiShoppingBag, 
-  FiLogOut, FiMenu, FiX
+  FiLogOut, FiMenu, FiX, FiClock
 } from "react-icons/fi";
 import { MdReceiptLong, MdOutlineRequestQuote, MdOutlineSupportAgent, MdOutlineRestaurantMenu } from "react-icons/md";
 import { TbReportAnalytics } from "react-icons/tb";

@@ -1,6 +1,6 @@
 import express from "express";
 import { protect, studentOnly } from "../middleware/authMiddleware.js";
-import { getStudentProfile, updateStudentProfile } from "../controllers/studentController.js";
+import { getStudentProfile, updateStudentProfile, verifyStudentPassword } from "../controllers/studentController.js";
 import { getUserBillings } from "../controllers/billingController.js";
 import { createQuery, getUserQueries } from "../controllers/queryController.js";
 import { getAllRooms, getStudentRoom } from "../controllers/roomController.js";
@@ -18,6 +18,7 @@ router.use(protect, studentOnly);
 
 router.get("/profile", getStudentProfile);
 router.put("/profile", updateStudentProfile);
+router.post("/profile/verify-password", verifyStudentPassword);
 router.get("/dashboard", (req, res) => {
   res.json({ message: "Student Dashboard" });
 });

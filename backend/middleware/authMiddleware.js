@@ -16,8 +16,10 @@ export const protect = (req, res, next) => {
 };
 
 export const adminOnly = (req, res, next) => {
-  if (req.user.role !== "admin")
+  if (req.user.role !== "admin") {
+    console.log(`🚫 Admin access denied for: ${req.user.email} (Role: ${req.user.role})`);
     return res.status(403).json({ message: "Admin access only" });
+  }
   next();
 };
 

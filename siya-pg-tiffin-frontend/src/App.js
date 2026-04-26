@@ -30,7 +30,7 @@ import Settings from "./Pages/admin/Settings";
 // Student Pages
 import StudentDashboard from "./Pages/student/StudentDashboard";
 import MyRoom from "./Pages/student/MyRoom";
-import RoomBills from "./Pages/student/RoomBills";
+import MonthlyBills from "./Pages/student/MonthlyBills";
 import RaiseQuery from "./Pages/student/RaiseQuery";
 import Profile from "./Pages/student/Profile";
 import StudentMyOrders from "./Pages/student/MyOrders";
@@ -84,7 +84,7 @@ function App() {
         }>
           <Route index element={<StudentDashboard />} />
           <Route path="my-room" element={<MyRoom />} />
-          <Route path="bills" element={<RoomBills />} />
+          <Route path="bills" element={<MonthlyBills />} />
           <Route path="raise-query" element={<RaiseQuery />} />
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<StudentMyOrders />} />

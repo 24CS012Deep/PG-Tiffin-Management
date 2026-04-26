@@ -11,6 +11,7 @@ import {
   faArrowRight,
   faStar,
   faCheckCircle,
+  faPhone,
 } from "@fortawesome/free-solid-svg-icons";
 import Navbar from "../components/Navbar";
 import API from "../utils/api";
@@ -25,10 +26,10 @@ export default function Home() {
   
   // Real database stats
   const [stats, setStats] = useState({
-    students: "500+",
-    customers: "100+",
-    rooms: "50+",
-    mealsDelivered: "10k+"
+    students: "0",
+    customers: "0",
+    rooms: "0",
+    vacancy: "7"
   });
 
   // Typewriter effect
@@ -188,7 +189,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 divide-x-0 md:divide-x divide-white/20">
             {[
               { number: stats.students, label: "Total Students" },
-              { number: stats.mealsDelivered, label: "Meals Delivered" },
+              { number: stats.vacancy, label: "Student Vacancy" },
               { number: stats.rooms, label: "PG Rooms" },
               { number: stats.customers, label: "Active Customers" }
             ].map((stat, idx) => (

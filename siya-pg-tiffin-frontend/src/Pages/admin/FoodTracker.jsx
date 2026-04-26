@@ -38,7 +38,7 @@ const FoodTracker = () => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [month, setMonth] = useState(getCurrentMonth());
-  const [mealPrices, setMealPrices] = useState({ breakfast: 20, lunch: 40, dinner: 40 });
+  const [mealPrices, setMealPrices] = useState({ breakfast: 40, lunch: 80, dinner: 80 });
   const [roomRent, setRoomRent] = useState(0);
   const [dailyRecords, setDailyRecords] = useState([]);
   const [recordId, setRecordId] = useState(null);
@@ -78,7 +78,7 @@ const FoodTracker = () => {
       .then(res => {
         const rec = res.data;
         setRoomRent(rec.roomRent || selectedStudent.rent || 0);
-        setMealPrices(rec.mealPrices || { breakfast: 20, lunch: 40, dinner: 40 });
+        setMealPrices(rec.mealPrices || { breakfast: 40, lunch: 80, dinner: 80 });
         setPaymentStatus(rec.paymentStatus || "pending");
         setRecordId(rec._id || null);
 
@@ -190,23 +190,11 @@ const FoodTracker = () => {
     } finally { setUpdatingStatus(false); }
   };
 
-  const handleMarkOverdue = async () => {
-    if (!recordId) return alert("Save the record first.");
-    setUpdatingStatus(true);
-    try {
-      await API.put(`/admin/meals/${recordId}/status`, { status: "overdue" });
-      setPaymentStatus("overdue");
-      setSuccess("Marked as OVERDUE.");
-      setTimeout(() => setSuccess(""), 4000);
-    } catch {
-      setError("Failed to update status.");
-    } finally { setUpdatingStatus(false); }
-  };
+
 
   const statusConfig = {
     paid:    { label: "PAID",    cls: "bg-emerald-100 text-emerald-700 border-emerald-300" },
-    pending: { label: "PENDING", cls: "bg-amber-100 text-amber-700 border-amber-300" },
-    overdue: { label: "OVERDUE", cls: "bg-red-100 text-red-700 border-red-300" }
+    pending: { label: "PENDING", cls: "bg-amber-100 text-amber-700 border-amber-300" }
   };
 
   return (
@@ -348,10 +336,37 @@ const FoodTracker = () => {
                 <MdOutlineRestaurantMenu className="text-orange-500" />
                 Daily Meal Record — {formatMonth(month)}
               </h3>
-              <div className="flex items-center gap-3 text-xs font-bold text-gray-400">
-                <span className="flex items-center gap-1"><MdOutlineBreakfastDining className="text-amber-500" /> B = ₹{mealPrices.breakfast}</span>
-                <span className="flex items-center gap-1"><MdOutlineLunchDining className="text-orange-500" /> L = ₹{mealPrices.lunch}</span>
-                <span className="flex items-center gap-1"><MdOutlineDinnerDining className="text-indigo-500" /> D = ₹{mealPrices.dinner}</span>
+              <div className="flex items-center gap-4 text-xs font-bold">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-lg border border-amber-100">
+                  <MdOutlineBreakfastDining className="text-amber-500 text-sm" />
+                  <span className="text-amber-700">B: ₹</span>
+                  <input
+                    type="number"
+                    value={mealPrices.breakfast}
+                    onChange={(e) => updatePrice("breakfast", e.target.value)}
+                    className="w-10 bg-transparent border-none focus:ring-0 p-0 text-amber-700 font-black"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 rounded-lg border border-orange-100">
+                  <MdOutlineLunchDining className="text-orange-500 text-sm" />
+                  <span className="text-orange-700">L: ₹</span>
+                  <input
+                    type="number"
+                    value={mealPrices.lunch}
+                    onChange={(e) => updatePrice("lunch", e.target.value)}
+                    className="w-10 bg-transparent border-none focus:ring-0 p-0 text-orange-700 font-black"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 rounded-lg border border-indigo-100">
+                  <MdOutlineDinnerDining className="text-indigo-500 text-sm" />
+                  <span className="text-indigo-700">D: ₹</span>
+                  <input
+                    type="number"
+                    value={mealPrices.dinner}
+                    onChange={(e) => updatePrice("dinner", e.target.value)}
+                    className="w-10 bg-transparent border-none focus:ring-0 p-0 text-indigo-700 font-black"
+                  />
+                </div>
               </div>
             </div>
 
@@ -405,7 +420,11 @@ const FoodTracker = () => {
                                   : "bg-white border-gray-200 text-gray-300 hover:border-gray-400"
                               }`}
                             >
-                              {r[meal] ? "✓" : "—"}
+                              {r[meal] ? (
+                                meal === "breakfast" ? <MdOutlineBreakfastDining size={16} /> :
+                                meal === "lunch" ? <MdOutlineLunchDining size={16} /> :
+                                <MdOutlineDinnerDining size={16} />
+                              ) : "—"}
                             </button>
                           </td>
                         ))}
@@ -504,21 +523,13 @@ const FoodTracker = () => {
               </button>
 
               <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Update Payment Status</p>
-                <div className="grid grid-cols-2 gap-3">
+                 <div className="pt-2">
                   <button
                     onClick={handleMarkPaid}
                     disabled={updatingStatus || paymentStatus === "paid"}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all disabled:opacity-40"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all disabled:opacity-40 shadow-sm"
                   >
                     <FiCheckCircle /> Mark PAID
-                  </button>
-                  <button
-                    onClick={handleMarkOverdue}
-                    disabled={updatingStatus || paymentStatus === "paid"}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition-all disabled:opacity-40"
-                  >
-                    <FiAlertCircle /> Mark OVERDUE
                   </button>
                 </div>
               </div>

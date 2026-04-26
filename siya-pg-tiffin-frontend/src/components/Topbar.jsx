@@ -32,7 +32,7 @@ const Topbar = () => {
 
       <div className="flex items-center gap-2 md:gap-4">
         <input
-          className="hidden md:block border rounded-full px-3 md:px-4 py-2 w-52 md:w-64 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="hidden md:block border border-gray-100 bg-gray-50 rounded-full px-5 py-2 w-52 md:w-64 text-sm focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 transition-all placeholder:text-gray-400"
           placeholder="Search anything..."
         />
 
@@ -40,7 +40,7 @@ const Topbar = () => {
           type="button"
           onClick={handleProfileRedirect}
           title="Go to profile"
-          className="bg-orange-100 text-orange-500 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base hover:bg-orange-200 transition cursor-pointer"
+          className="bg-[#FF6B00] text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base hover:bg-orange-600 transition-all cursor-pointer shadow-sm"
         >
           {getInitials()}
         </button>

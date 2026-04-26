@@ -45,7 +45,7 @@ const StudentDashboard = () => {
       } catch (err) {
         console.error("Billings API failed:", err);
       }
-      const pendingBills = billsRes?.data?.filter(b => b.status === "pending").length || 0;
+      const pendingBills = billsRes?.data?.filter(b => b.status === "pending" || b.status === "unpaid").length || 0;
       const overdueBills = billsRes?.data?.filter(b => b.status === "overdue").length || 0;
 
       // Fetch queries

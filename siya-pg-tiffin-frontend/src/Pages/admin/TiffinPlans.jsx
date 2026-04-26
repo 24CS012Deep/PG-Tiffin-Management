@@ -1,645 +1,509 @@
 import { useEffect, useState } from "react";
 import API from "../../utils/api";
-import { 
-  FiEdit2, FiTrash2, FiPlus, FiUsers, FiCheck, 
-  FiX, FiBox, FiCalendar, FiClock, FiCoffee, FiAlertCircle, FiList, FiCheckCircle, FiStar,
-  FiPower
+import {
+  FiEdit2, FiTrash2, FiPlus, FiCheck, FiX,
+  FiCalendar, FiCheckCircle, FiShoppingCart,
+  FiBox, FiClock, FiDollarSign, FiInfo, FiTag, FiFileText, FiStar, FiZap, FiUser, FiHash, FiTrendingUp, FiArrowRight
 } from "react-icons/fi";
-import { MdOutlineRestaurantMenu } from "react-icons/md";
+import { MdOutlineRestaurantMenu, MdFastfood } from "react-icons/md";
 
 const TiffinPlans = () => {
   const [plans, setPlans] = useState([]);
+  const [historyPlans, setHistoryPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [view, setView] = useState("active"); // 'active' or 'history'
   const [showModal, setShowModal] = useState(false);
-  const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
-  const [selectedPlanForMenu, setSelectedPlanForMenu] = useState(null);
-  const [menuDate, setMenuDate] = useState(new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0]);
-  const [menuItems, setMenuItems] = useState("");
-  const [now, setNow] = useState(new Date());
-
-  const [cutOffType, setCutOffType] = useState('time');
-  const [cutOffMinutes, setCutOffMinutes] = useState('60');
-
-  const todayString = new Date().toISOString().split('T')[0];
+  
   const [formData, setFormData] = useState({
-    name: "",
-    price: "",
+    planNumber: "",
+    tiffinPrice: "",
+    maxCapacity: "50",
+    date: new Date().toISOString().split('T')[0],
     description: "",
-    maxCustomers: 50,
-    type: "veg",
-    mealTypes: ["lunch", "dinner"],
-    targetDate: "",
-    cutOffTime: "10:00",
-    isActive: true
+    mealShifts: ["lunch"],
+    items: "",
+    isActive: true,
   });
 
   useEffect(() => {
-    fetchPlans();
-    const timer = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
+    if (view === "active") fetchPlans();
+    else fetchHistory();
+  }, [view]);
 
   const fetchPlans = async () => {
     try {
       setLoading(true);
       const res = await API.get("/admin/tiffin-plans");
-      setPlans(Array.isArray(res.data) ? res.data : (res.data.plans || []));
-      setError("");
+      setPlans(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Failed to fetch plans:", err);
-      setError("Failed to load tiffin plans");
+      console.error("Failed to fetch plans");
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleActiveStatus = async (plan) => {
+  const fetchHistory = async () => {
     try {
-      await API.put(`/admin/tiffin-plans/${plan._id}`, { ...plan, isActive: !plan.isActive });
-      fetchPlans();
+      setLoading(true);
+      const res = await API.get("/admin/tiffin-plans/history");
+      setHistoryPlans(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      alert("Failed to update plan status");
+      console.error("Failed to fetch history");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  const handleToggleShift = (shift) => {
+    const updatedShifts = formData.mealShifts.includes(shift)
+      ? formData.mealShifts.filter((s) => s !== shift)
+      : [...formData.mealShifts, shift];
+    setFormData({ ...formData, mealShifts: updatedShifts });
   };
 
-  const handleMealTypeChange = (type) => {
-    if (formData.mealTypes.includes(type)) {
-      setFormData({
-        ...formData,
-        mealTypes: formData.mealTypes.filter(t => t !== type)
-      });
-    } else {
-      setFormData({
-        ...formData,
-        mealTypes: [...formData.mealTypes, type]
-      });
-    }
+  const resetForm = () => {
+    setFormData({
+      planNumber: `Plan Number - ${plans.length + 1}`,
+      tiffinPrice: "",
+      maxCapacity: "50",
+      date: new Date().toISOString().split('T')[0],
+      description: "",
+      mealShifts: ["lunch"],
+      items: "",
+      isActive: true,
+    });
+    setEditingPlan(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.mealShifts.length === 0) {
+      alert("Please select at least one meal shift");
+      return;
+    }
     try {
-      const payload = { ...formData };
-      if (cutOffType === 'minutes') {
-        payload.cutOffTime = `${cutOffMinutes}m`;
-      }
-
       if (editingPlan) {
-        await API.put(`/admin/tiffin-plans/${editingPlan._id}`, payload);
+        await API.put(`/admin/tiffin-plans/${editingPlan._id}`, formData);
       } else {
-        await API.post("/admin/tiffin-plans", payload);
+        await API.post("/admin/tiffin-plans", formData);
       }
       setShowModal(false);
       resetForm();
       fetchPlans();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to save plan");
+      alert("Failed to save plan");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this plan?")) {
+  const deletePlan = async (id) => {
+    if (window.confirm("Delete this tiffin plan?")) {
       try {
         await API.delete(`/admin/tiffin-plans/${id}`);
-        fetchPlans();
+        if (view === "active") fetchPlans();
+        else fetchHistory();
       } catch (err) {
         alert(err.response?.data?.message || "Failed to delete plan");
       }
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      price: "",
-      description: "",
-      maxCustomers: 50,
-      type: "veg",
-      mealTypes: ["lunch", "dinner"],
-      targetDate: "",
-      cutOffTime: "10:00",
-      isActive: true
-    });
-    setCutOffType('time');
-    setCutOffMinutes('60');
-    setEditingPlan(null);
-  };
-
-  const openEditModal = (plan) => {
-    setEditingPlan(plan);
-    
-    const isMins = plan.cutOffTime?.endsWith('m');
-    setCutOffType(isMins ? 'minutes' : 'time');
-    if (isMins) {
-      setCutOffMinutes(plan.cutOffTime.replace('m', ''));
-    }
-
-    setFormData({
-      name: plan.name,
-      price: plan.price,
-      description: plan.description || "",
-      maxCustomers: plan.maxCustomers,
-      type: plan.type || "veg",
-      mealTypes: plan.mealTypes || ["lunch", "dinner"],
-      targetDate: plan.targetDate || "",
-      cutOffTime: !isMins ? (plan.cutOffTime || "10:00") : "10:00",
-      isActive: plan.isActive !== false
-    });
-    setShowModal(true);
-  };
-
-  const openMenuModal = (plan) => {
-    setSelectedPlanForMenu(plan);
-    const targetDate = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-    setMenuDate(targetDate);
-    
-    const existingMenu = plan.menu?.find(m => m.date === targetDate);
-    setMenuItems(existingMenu ? existingMenu.items.join("\n") : "");
-    setShowMenuModal(true);
-  };
-
-  const handleDateChangeForMenu = (e) => {
-    const newDate = e.target.value;
-    setMenuDate(newDate);
-    if (selectedPlanForMenu) {
-      const existingMenu = selectedPlanForMenu.menu?.find(m => m.date === newDate);
-      setMenuItems(existingMenu ? existingMenu.items.join("\n") : "");
-    }
-  };
-
-  const handleMenuSubmit = async (e) => {
-    e.preventDefault();
+  const toggleActiveStatus = async (plan) => {
     try {
-      const itemsArray = menuItems.split("\n").filter(item => item.trim() !== "");
-      await API.post("/admin/tiffin-plans/set-menu", {
-        planId: selectedPlanForMenu._id,
-        date: menuDate,
-        items: itemsArray
+      await API.put(`/admin/tiffin-plans/${plan._id}`, {
+        ...plan,
+        isActive: !plan.isActive,
       });
-      setShowMenuModal(false);
       fetchPlans();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to set menu");
+      alert("Failed to update status");
     }
-  };
-
-  const getCountdown = (cutOffTime) => {
-    if(!cutOffTime || cutOffTime.endsWith('m')) return null;
-    const [h, m] = cutOffTime.split(':').map(Number);
-    const cutoffDate = new Date();
-    cutoffDate.setHours(h, m, 0, 0);
-    const diffMs = cutoffDate - now;
-    if (diffMs < 0) return { text: "Closed for today", closingSoon: false };
-    const diffMins = Math.floor(diffMs / 60000);
-    const hours = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    return { 
-      text: `⏳ Closes in ${hours > 0 ? hours + 'h ' : ''}${mins}m`,
-      closingSoon: diffMins <= 30
-    };
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex flex-col items-center justify-center h-96">
         <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-orange-500"></div>
+        <p className="mt-4 text-slate-500 font-bold tracking-widest uppercase text-[10px]">Synchronizing Plans...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-12 font-sans">
+    <div className="min-h-screen bg-gray-50/30 pb-12 font-sans text-slate-900">
       {/* Header Section */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h2 className="text-3xl font-black flex items-center gap-3 text-gray-800 tracking-tight">
-              Tiffin Plans
-            </h2>
-            <p className="text-gray-500 mt-1 font-medium text-sm">Manage meal plans</p>
+      <div className="mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
+          <div className="flex flex-col md:flex-row md:items-center gap-6">
+            <div className="w-16 h-16 bg-[#FF6B00] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-100 flex-shrink-0">
+              <FiBox size={32} />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Tiffin Plans</h2>
+              <p className="text-slate-500 font-medium mt-1">Manage and track your daily meal services</p>
+            </div>
           </div>
-          <button
-            onClick={() => {
-              resetForm();
-              setShowModal(true);
-            }}
-            className="flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl hover:bg-orange-500 hover:shadow-lg hover:shadow-orange-200 transition-all font-semibold text-sm"
-          >
-            <FiPlus size={18} /> Create New Plan
-          </button>
+          
+          <div className="flex items-center gap-4">
+            {/* View Toggle */}
+            <div className="bg-white p-1 rounded-2xl border border-gray-100 flex shadow-sm">
+              <button 
+                onClick={() => setView("active")}
+                className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                  view === "active" ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                Active
+              </button>
+              <button 
+                onClick={() => setView("history")}
+                className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                  view === "history" ? "bg-slate-900 text-white shadow-md" : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                History
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                resetForm();
+                setShowModal(true);
+              }}
+              className="flex items-center gap-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8C42] text-white px-8 py-3.5 rounded-full hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5 transition-all font-bold text-xs uppercase tracking-widest active:scale-95 shadow-md"
+            >
+              <FiPlus size={18} /> New Plan
+            </button>
+          </div>
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm font-medium">
-          {error}
-        </div>
-      )}
-
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {plans.length > 0 ? (
-          plans.map((plan) => {
-            const fillPct = plan.maxCustomers > 0 ? ((plan.currentCustomers || 0) / plan.maxCustomers) * 100 : 0;
-            const isFull = plan.currentCustomers >= plan.maxCustomers;
-            const isExpired = plan.targetDate && plan.targetDate < todayString;
-            const isActive = plan.isActive !== false && !isExpired;
-            const countdown = isActive ? getCountdown(plan.cutOffTime) : null;
-            const isMinsCutoff = plan.cutOffTime?.endsWith('m');
-            
-            const summary = `Includes ${plan.mealTypes?.map(m=>m.charAt(0).toUpperCase()+m.slice(1)).join(" & ")} • ${plan.type === 'veg' ? 'Veg Only' : plan.type === 'non-veg' ? 'Non-Veg Only' : 'Mixed Diet'}`;
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {(view === "active" ? plans : historyPlans).length > 0 ? (
+          (view === "active" ? plans : historyPlans).map((plan) => {
+            const menuItems = (plan.items || "").split(/[,\n]/).filter(item => item.trim() !== "");
+            const capacityLeft = plan.maxCapacity - (plan.ordersCount || 0);
+            const percentage = (capacityLeft / plan.maxCapacity) * 100;
 
             return (
-              <div key={plan._id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 p-6 flex flex-col h-full relative group">
-                
-                {/* Top Section */}
+              <div 
+                key={plan._id} 
+                className={`bg-white rounded-[24px] p-6 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.04)] transition-all duration-300 group relative flex flex-col hover:-translate-y-1.5 ${
+                  !plan.isActive && "opacity-75"
+                }`}
+              >
+                {/* Header Section */}
                 <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1 pr-2">
-                    <h3 className="text-lg font-bold text-gray-800 leading-tight mb-2">{plan.name}</h3>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${plan.type === 'veg' ? 'bg-green-50 text-green-700' : plan.type === 'non-veg' ? 'bg-red-50 text-red-700' : 'bg-orange-50 text-orange-700'}`}>
-                        {plan.type === 'veg' ? '🟢 Veg' : plan.type === 'non-veg' ? '🔴 Non-Veg' : '🟡 Both'}
-                      </span>
+                  <h3 className="text-lg font-bold text-slate-800 tracking-tight uppercase">
+                    {plan.planNumber}
+                  </h3>
+                  {view === "active" ? (
+                    <label className="relative inline-flex items-center cursor-pointer scale-90">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={plan.isActive} 
+                        onChange={() => toggleActiveStatus(plan)} 
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                    </label>
+                  ) : (
+                    <div className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-gray-200">
+                      PAST
                     </div>
-                  </div>
-                  
-                  {/* Status Toggle Switch */}
-                  <label className="flex items-center cursor-pointer ml-3 mt-1" title={plan.isActive ? "Deactivate Plan" : "Activate Plan"}>
-                    <div className="relative">
-                      <input type="checkbox" className="sr-only" checked={plan.isActive !== false} onChange={() => toggleActiveStatus(plan)} />
-                      <div className={`block w-10 h-6 rounded-full transition-colors ${plan.isActive !== false ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
-                      <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${plan.isActive !== false ? 'transform translate-x-4' : ''}`}></div>
-                    </div>
-                  </label>
+                  )}
                 </div>
 
-                {/* Middle Section */}
-                <div className="mb-5">
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-black text-orange-500">₹{plan.price}</span>
-                    <span className="text-gray-400 text-xs font-semibold">/ month</span>
+                {/* Date + Capacity Row */}
+                <div className="flex items-center gap-4 mb-5 text-gray-400">
+                  <div className="flex items-center gap-1.5">
+                    <FiCalendar size={14} />
+                    <span className="text-[11px] font-semibold tracking-wide uppercase">
+                      {new Date(plan.date || plan.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+                    </span>
                   </div>
-                  
-                  {/* Capacity Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
-                      <span>Capacity</span>
-                      <span className={isFull ? "text-red-500" : "text-gray-700"}>{plan.currentCustomers || 0} / {plan.maxCustomers}</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-1000 ${isFull ? 'bg-red-500' : 'bg-orange-500'}`} style={{ width: `${Math.min(fillPct, 100)}%` }} />
-                    </div>
-                  </div>
-
-                  {/* Meals */}
-                  <div className="flex flex-wrap gap-2">
-                    {['breakfast', 'lunch', 'dinner'].map(m => {
-                       const has = plan.mealTypes?.includes(m);
-                       const icon = m === 'breakfast' ? '🍳' : m === 'lunch' ? '🍛' : '🍽';
-                       return (
-                         <span key={m} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${has ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-400 opacity-50 grayscale'}`}>
-                           <span>{icon}</span> <span className="capitalize">{m}</span>
-                         </span>
-                       )
-                    })}
+                  <div className="flex items-center gap-1.5">
+                    <FiUser size={14} />
+                    <span className="text-[11px] font-semibold tracking-wide uppercase">Capacity: {plan.maxCapacity}</span>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-gray-500 font-medium leading-relaxed mb-5 line-clamp-2">{plan.description || summary}</p>
+                {/* Price Section */}
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-[#FF6B00]">₹{plan.tiffinPrice}</span>
+                    <span className="text-gray-400 text-xs font-medium tracking-wide">/ meal</span>
+                  </div>
+                </div>
 
-                {/* Timing Section */}
-                <div className="mt-auto pt-4 border-t border-gray-100 flex flex-col gap-3">
-                  <div className="flex justify-between items-center">
-                    {isMinsCutoff ? (
-                      <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
-                        <FiClock className="text-orange-500" /> Closes before: {plan.cutOffTime.replace('m', '')} mins
-                      </span>
-                    ) : (
-                      <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
-                        <FiClock className="text-orange-500" /> Cut-off: {plan.cutOffTime || 'None'}
-                      </span>
+                {/* Plan Type Pill */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {plan.mealShifts?.map(shift => (
+                    <span key={shift} className="bg-orange-50 text-[#FF6B00] px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-orange-100">
+                      {shift}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Availability Bar (Only for Active View) */}
+                {view === "active" && (
+                  <div className="mb-8">
+                    <div className="flex justify-between items-center mb-2.5">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Availability</span>
+                      <span className="text-[10px] font-bold text-[#FF6B00]">{capacityLeft} Left</span>
+                    </div>
+                    <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-[#FF6B00] h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(255,107,0,0.3)]"
+                        style={{ width: `${Math.max(5, percentage)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Stats Section (Only for History View) */}
+                {view === "history" && (
+                  <div className="mb-8 grid grid-cols-2 gap-3">
+                    <div className="bg-orange-50/50 p-3 rounded-2xl border border-orange-100/50">
+                      <p className="text-[9px] font-bold text-orange-400 uppercase tracking-widest mb-1">Total Orders</p>
+                      <p className="text-xl font-black text-[#FF6B00]">{plan.ordersCount || 0}</p>
+                    </div>
+                    <div className="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50">
+                      <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Revenue</p>
+                      <p className="text-xl font-black text-emerald-600 font-sans">₹{plan.totalRevenue || 0}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Today's Menu Section */}
+                <div className="flex-1 mb-8">
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">PLAN MENU</h4>
+                  <div className="space-y-2">
+                    {menuItems.map((item, idx) => (
+                      <div key={idx} className="bg-gray-50 border border-gray-100/50 p-3 rounded-xl flex items-center gap-3 hover:bg-white hover:border-orange-100 transition-all group/item cursor-default">
+                        <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-[#FF6B00] bg-white rounded-lg border border-orange-50 shadow-sm">
+                          {idx + 1}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-700 tracking-wide uppercase">{item.trim()}</span>
+                      </div>
+                    ))}
+                    {menuItems.length === 0 && (
+                      <p className="text-[10px] text-gray-400 italic">No menu items added.</p>
                     )}
-                    
-                    {countdown && !isMinsCutoff && (
-                      <span className={`font-bold text-[10px] px-2 py-1 rounded-md ${countdown.closingSoon ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-amber-50 text-amber-600'}`}>
-                        {countdown.text}
-                      </span>
-                    )}
                   </div>
-                  
-                  {/* Actions Container */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <button onClick={() => openEditModal(plan)} className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-bold py-2 rounded-xl border border-gray-200 hover:border-gray-300 transition-all text-xs flex items-center justify-center gap-2">
-                      <FiEdit2 size={14} /> Edit
-                    </button>
-                    <button onClick={() => handleDelete(plan._id)} className="flex-1 bg-white hover:bg-red-50 text-gray-700 hover:text-red-600 font-bold py-2 rounded-xl border border-gray-200 hover:border-red-200 transition-all text-xs flex items-center justify-center gap-2">
-                      <FiTrash2 size={14} /> Delete
-                    </button>
-                  </div>
-                  
-                  <button 
-                    onClick={() => openMenuModal(plan)} 
-                    className="w-full bg-gray-900 hover:bg-orange-500 text-white font-bold py-2.5 rounded-xl transition-colors text-xs flex items-center justify-center gap-2"
-                  >
-                    <FiList size={16} /> Manage Menu
-                  </button>
                 </div>
 
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  {view === "active" ? (
+                    <>
+                      <button 
+                        onClick={() => {
+                          if (!plan.isActive) return;
+                          setEditingPlan(plan);
+                          setFormData({
+                            ...plan,
+                            date: plan.date || new Date().toISOString().split('T')[0]
+                          });
+                          setShowModal(true);
+                        }}
+                        disabled={!plan.isActive}
+                        className={`flex-1 py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm ${
+                          plan.isActive 
+                            ? "bg-slate-900 text-white hover:bg-slate-800 active:scale-95" 
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        <FiEdit2 size={16} /> Edit
+                      </button>
+                      <button 
+                        onClick={() => deletePlan(plan._id)}
+                        className="w-14 h-14 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100 shadow-sm active:scale-95"
+                        title="Delete Plan"
+                      >
+                        <FiTrash2 size={18} />
+                      </button>
+                    </>
+                  ) : (
+                    <button 
+                      onClick={() => deletePlan(plan._id)}
+                      className="w-full bg-red-50 text-red-500 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all border border-red-100 shadow-sm active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <FiTrash2 size={16} /> Delete from History
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })
         ) : (
-          <div className="col-span-full flex flex-col items-center justify-center p-16 bg-white rounded-3xl border border-dashed border-gray-300">
-            <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 border border-gray-100">
-              <FiBox className="text-3xl text-gray-400" />
+          <div className="col-span-full py-24 bg-white rounded-[2.5rem] border border-gray-100 flex flex-col items-center justify-center text-center shadow-sm">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+              {view === "active" ? <MdFastfood className="text-4xl text-gray-300" /> : <FiTrendingUp className="text-4xl text-gray-300" />}
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No Plans Created Yet</h3>
-            <p className="text-gray-500 text-sm mb-6 max-w-sm text-center">Start offering meals by creating your first tiffin plan.</p>
-            <button
-              onClick={() => { resetForm(); setShowModal(true); }}
-              className="bg-gray-900 text-white px-6 py-2.5 rounded-xl hover:bg-orange-500 transition-colors font-semibold text-sm shadow-sm"
-            >
-              Create First Plan
-            </button>
+            <h3 className="text-2xl font-bold text-slate-400">{view === "active" ? "No tiffin plans yet" : "No history recorded"}</h3>
+            <p className="text-slate-400 mt-2 font-medium">{view === "active" ? "Create your first plan to start serving customers!" : "Your past performance will appear here."}</p>
+            {view === "active" && (
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="mt-8 bg-[#FF6B00] text-white px-10 py-4 rounded-full font-bold text-xs uppercase tracking-widest hover:shadow-lg hover:shadow-orange-200 transition-all active:scale-95 shadow-md">
+                Get Started
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Modal for Create/Edit */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full my-8 overflow-hidden">
-            <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
-              <h3 className="text-xl font-black text-gray-800 tracking-tight">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setShowModal(false)}
+          ></div>
+          
+          {/* Modal Container */}
+          <div className="bg-white rounded-[24px] w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] animate-in zoom-in-95 duration-300 flex flex-col relative z-10">
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowModal(false)}
+              className="absolute top-6 right-6 z-20 p-2 rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all"
+            >
+              <FiX size={20} />
+            </button>
+
+            {/* Header */}
+            <div className="px-10 pt-10 pb-6 text-left">
+              <h3 className="text-3xl font-bold text-slate-800 relative inline-block">
                 {editingPlan ? "Edit Tiffin Plan" : "Create New Tiffin Plan"}
+                <div className="absolute -bottom-2 left-0 w-12 h-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C42] rounded-full"></div>
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:bg-red-50 hover:text-red-600 p-2 rounded-xl transition-colors bg-gray-50">
-                <FiX size={20} />
-              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8">
-              <div className="space-y-8">
-                {/* 1. Plan Details */}
-                <section>
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span className="w-6 h-px bg-gray-200"></span> Plan Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Plan Name</label>
+            <form onSubmit={handleSubmit} className="px-10 pb-8 overflow-y-auto custom-scrollbar flex-1">
+              <div className="space-y-6">
+                {/* Plan Number */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Plan Number</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all"
+                    placeholder="Plan Number - 1"
+                    value={formData.planNumber}
+                    onChange={(e) => setFormData({ ...formData, planNumber: e.target.value })}
+                  />
+                </div>
+
+                {/* Manage Items */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-semibold text-slate-700">Manage Items</label>
+                    <span className="bg-orange-50 text-[#FF6B00] px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-orange-100">One item per line</span>
+                  </div>
+                  <textarea
+                    required
+                    className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all min-h-[120px] placeholder:text-gray-400"
+                    placeholder="Add items (one item per line)"
+                    value={formData.items}
+                    onChange={(e) => setFormData({ ...formData, items: e.target.value })}
+                  />
+                </div>
+
+                {/* Price & Capacity */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Tiffin Price</label>
+                    <div className="relative group">
+                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#FF6B00] transition-colors">₹</div>
                       <input
-                        type="text"
-                        name="name"
-                        placeholder="e.g., Premium Student Combo"
-                        value={formData.name}
-                        onChange={handleInputChange}
+                        type="number"
                         required
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 transition-all font-medium text-gray-800 placeholder-gray-300"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Monthly Price (₹)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                        <input
-                          type="number"
-                          name="price"
-                          placeholder="2500"
-                          value={formData.price}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 transition-all font-medium text-gray-800"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Max Capacity</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><FiUsers size={14} /></span>
-                        <input
-                          type="number"
-                          name="maxCustomers"
-                          placeholder="50"
-                          value={formData.maxCustomers}
-                          onChange={handleInputChange}
-                          className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 transition-all font-medium text-gray-800"
-                        />
-                      </div>
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">Description</label>
-                      <textarea
-                        name="description"
-                        placeholder="Highlight the benefits of this plan..."
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        rows="2"
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 transition-all font-medium text-gray-800 resize-none placeholder-gray-300"
+                        className="w-full pl-10 pr-5 py-4 bg-white border border-gray-200 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all"
+                        placeholder="0.00"
+                        value={formData.tiffinPrice}
+                        onChange={(e) => setFormData({ ...formData, tiffinPrice: e.target.value })}
                       />
                     </div>
                   </div>
-                </section>
-
-                {/* 2. Menu Configuration */}
-                <section>
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span className="w-6 h-px bg-gray-200"></span> Meal Configuration
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div className="md:col-span-5">
-                      <label className="block text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Dietary Type</label>
-                      <div className="flex bg-gray-50 p-1 rounded-xl">
-                        {[
-                          {v: 'veg', l: 'Veg'}, 
-                          {v: 'non-veg', l: 'Non-Veg'}, 
-                          {v: 'both', l: 'Both'}
-                        ].map(type => (
-                          <button
-                            type="button"
-                            key={type.v}
-                            onClick={() => handleInputChange({ target: { name: 'type', value: type.v }})}
-                            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${formData.type === type.v ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
-                          >
-                            {type.l}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="md:col-span-7">
-                      <label className="block text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Included Meals</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { id: 'breakfast', label: 'Breakfast', icon: '🍳' },
-                          { id: 'lunch', label: 'Lunch', icon: '🍛' },
-                          { id: 'dinner', label: 'Dinner', icon: '🍽' }
-                        ].map((meal) => {
-                          const isSelected = formData.mealTypes?.includes(meal.id);
-                          return (
-                            <label
-                              key={meal.id}
-                              className={`flex flex-col items-center justify-center gap-1.5 py-3 px-2 border rounded-xl cursor-pointer transition-all text-center ${
-                                isSelected
-                                  ? 'border-orange-500 bg-orange-50 shadow-sm'
-                                  : 'border-gray-200 bg-white hover:border-gray-300 opacity-80 hover:opacity-100'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => handleMealTypeChange(meal.id)}
-                                className="hidden"
-                              />
-                              <span className="text-xl leading-none">{meal.icon}</span>
-                              <span className={`text-[11px] font-bold ${isSelected ? 'text-orange-900' : 'text-gray-600'}`}>
-                                {meal.label}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Max Capacity</label>
+                    <div className="relative group">
+                      <FiBox className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#FF6B00] transition-colors" />
+                      <input
+                        type="number"
+                        required
+                        className="w-full pl-12 pr-5 py-4 bg-white border border-gray-200 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all"
+                        placeholder="50"
+                        value={formData.maxCapacity}
+                        onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+                      />
                     </div>
                   </div>
-                </section>
+                </div>
 
-                {/* 3. Timing & Constraints */}
-                <section>
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span className="w-6 h-px bg-gray-200"></span> Order Cut-off Setup
-                  </h4>
-                  
-                  <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-5">
-                    <div className="flex gap-4 mb-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          checked={cutOffType === 'time'} 
-                          onChange={() => setCutOffType('time')} 
-                          className="accent-orange-500 w-4 h-4"
-                        />
-                        <span className="text-sm font-bold text-gray-700">Exact Time Picker</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          checked={cutOffType === 'minutes'} 
-                          onChange={() => setCutOffType('minutes')} 
-                          className="accent-orange-500 w-4 h-4"
-                        />
-                        <span className="text-sm font-bold text-gray-700">Minutes Dropdown</span>
-                      </label>
-                    </div>
-
-                    <div className="mt-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-                      {cutOffType === 'time' ? (
-                        <div>
-                          <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Set exact cut-off time</label>
-                          <input
-                            type="time"
-                            name="cutOffTime"
-                            value={formData.cutOffTime}
-                            onChange={handleInputChange}
-                            className="w-full max-w-xs px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 transition-all font-medium text-gray-800"
-                          />
-                          <p className="text-[10px] text-gray-400 mt-2">Example: 10:00 AM. Orders close exactly at this time.</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Close orders before meal by</label>
-                          <select
-                            value={cutOffMinutes}
-                            onChange={(e) => setCutOffMinutes(e.target.value)}
-                            className="w-full max-w-xs px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 transition-all font-medium text-gray-800"
-                          >
-                            <option value="30">30 mins</option>
-                            <option value="60">60 mins</option>
-                            <option value="90">90 mins</option>
-                          </select>
-                          <p className="text-[10px] text-gray-400 mt-2">Example: "Order closes before 60 minutes".</p>
-                        </div>
-                      )}
-                    </div>
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Date Field</label>
+                  <div className="relative group">
+                    <FiCalendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#FF6B00] transition-colors" />
+                    <input
+                      type="date"
+                      required
+                      className="w-full pl-12 pr-5 py-4 bg-white border border-gray-200 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    />
                   </div>
-                </section>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Description <span className="text-gray-400 font-normal">(Optional)</span></label>
+                  <textarea
+                    className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all min-h-[80px] placeholder:text-gray-400"
+                    placeholder="Highlight the benefits of this plan..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+
+                {/* Plan Availability Selector */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">Plan Availability</label>
+                  <div className="flex gap-3">
+                    {['lunch', 'dinner'].map((shift) => (
+                      <button
+                        key={shift}
+                        type="button"
+                        onClick={() => handleToggleShift(shift)}
+                        className={`flex-1 py-4 rounded-xl border-2 transition-all font-bold text-sm ${
+                          formData.mealShifts.includes(shift)
+                            ? "bg-orange-50 border-[#FF6B00] text-[#FF6B00] shadow-sm"
+                            : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
+                        }`}
+                      >
+                        Set Plan for {shift.charAt(0).toUpperCase() + shift.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-4 pt-6 mt-8 border-t border-gray-100">
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-10 pb-2 mt-4 bg-white">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-6 py-3 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 font-bold transition-all text-sm"
+                  className="flex-1 py-4 rounded-full font-bold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-[2] px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-orange-500 hover:shadow-lg hover:shadow-orange-200 font-bold transition-all text-sm flex justify-center items-center gap-2"
+                  className="flex-[1.5] py-4 bg-gradient-to-r from-[#FF6B00] to-[#FF8C42] text-white rounded-full hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5 transition-all font-bold text-sm shadow-md"
                 >
-                  <FiCheckCircle size={16} /> {editingPlan ? "Save Changes" : "Create Tiffin Plan"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Menu Modal */}
-      {showMenuModal && selectedPlanForMenu && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden my-8">
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
-              <div>
-                <h3 className="text-xl font-black text-gray-800 tracking-tight flex items-center gap-2">
-                  <FiList className="text-orange-500" /> Manage Daily Menu
-                </h3>
-                <p className="text-xs text-gray-500 mt-1 font-medium">{selectedPlanForMenu.name}</p>
-              </div>
-              <button onClick={() => setShowMenuModal(false)} className="text-gray-400 hover:bg-red-50 hover:text-red-600 p-2 rounded-xl transition-colors bg-gray-50">
-                <FiX size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleMenuSubmit} className="p-6 space-y-6">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide flex items-center gap-1.5">
-                  <FiCalendar className="text-gray-400" /> Target Date
-                </label>
-                <input
-                  type="date"
-                  value={menuDate}
-                  onChange={handleDateChangeForMenu}
-                  required
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 font-medium text-gray-800 transition-all"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Menu Items</label>
-                  <span className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold border border-orange-100">One item per line</span>
-                </div>
-                <textarea
-                  placeholder="Roti&#10;Dal&#10;Rice&#10;Mix Veg"
-                  value={menuItems}
-                  onChange={(e) => setMenuItems(e.target.value)}
-                  rows="6"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-50 font-medium text-gray-800 resize-none transition-all"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowMenuModal(false)} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 font-bold transition-all text-sm">
-                  Cancel
-                </button>
-                <button type="submit" className="flex-[2] px-4 py-3 bg-gray-900 text-white rounded-xl hover:bg-orange-500 hover:shadow-lg hover:shadow-orange-200 font-bold transition-all text-sm">
-                  Save Menu
+                  {editingPlan ? "Update Tiffin Plan" : "Create Tiffin Plan"}
                 </button>
               </div>
             </form>

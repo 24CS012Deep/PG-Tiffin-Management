@@ -1,13 +1,21 @@
 import mongoose from "mongoose";
 
 const tiffinPlanSchema = new mongoose.Schema({
-  name: { 
+  planNumber: { 
     type: String, 
     required: true 
   },
-  price: { 
+  tiffinPrice: { 
     type: Number, 
     required: true 
+  },
+  maxCapacity: {
+    type: Number,
+    default: 50
+  },
+  date: { 
+    type: String, // YYYY-MM-DD
+    required: true
   },
   description: { 
     type: String 
@@ -16,47 +24,29 @@ const tiffinPlanSchema = new mongoose.Schema({
     type: String,
     default: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
   },
-  maxCustomers: { 
-    type: Number, 
-    default: 50 
+  items: {
+    type: String, // User wants to write items directly
+    required: true
   },
-  currentCustomers: {
-    type: Number,
-    default: 0
-  },
-  createdBy: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User" 
-  },
-  menu: [
-    {
-      date: String,
-      items: [String],
-    },
-  ],
   isActive: {
     type: Boolean,
     default: true
   },
-  targetDate: {
-    type: String, // YYYY-MM-DD
-  },
-  cutOffTime: {
-    type: String, // HH:MM (e.g., "10:00")
-  },
-  type: {
-    type: String,
-    enum: ["veg", "non-veg", "both"],
-    default: "veg"
-  },
-  mealTypes: [{
-    type: String,
+  mealShifts: {
+    type: [String],
     enum: ["breakfast", "lunch", "dinner"],
-    default: ["lunch", "dinner"]
-  }],
-  // NOTE: Manual createdAt/updatedAt removed.
-  // Using timestamps:true so Mongoose auto-manages both fields reliably on every save().
+    default: ["lunch"]
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  }
 }, { timestamps: true });
+
+// Backward compatibility for old code that might use "name" or "price"
+tiffinPlanSchema.virtual('name').get(function() { return this.planNumber; });
+tiffinPlanSchema.virtual('price').get(function() { return this.tiffinPrice; });
 
 const TiffinPlan = mongoose.models.TiffinPlan || mongoose.model("TiffinPlan", tiffinPlanSchema);
 export default TiffinPlan;

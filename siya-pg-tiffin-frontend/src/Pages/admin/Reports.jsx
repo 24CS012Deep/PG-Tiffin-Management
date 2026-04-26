@@ -20,6 +20,8 @@ import {
 } from "react-icons/fi";
 import { TbReportAnalytics } from "react-icons/tb";
 import { MdOutlineSupportAgent } from "react-icons/md";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Reports = () => {
   const [data, setData] = useState(null);
@@ -43,6 +45,95 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const downloadPdfReport = () => {
+    const doc = new jsPDF();
+    const timestamp = new Date().toLocaleString("en-IN");
+    
+    // Header - Modern Gradient Style
+    doc.setFillColor(249, 115, 22); // Orange-500
+    doc.rect(0, 0, 210, 45, "F");
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("SIYA PG MANAGEMENT", 105, 20, { align: "center" });
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text("BUSINESS PERFORMANCE REPORT", 105, 30, { align: "center" });
+    
+    // Sub-header Info
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.text(`Generated on: ${timestamp}`, 20, 55);
+    doc.text(`Report Type: ${activeTab.toUpperCase()} ANALYSIS`, 190, 55, { align: "right" });
+    
+    // Section Title
+    doc.setTextColor(31, 41, 55);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${activeTab.toUpperCase()} SUMMARY`, 20, 70);
+    doc.setDrawColor(249, 115, 22);
+    doc.setLineWidth(1);
+    doc.line(20, 73, 50, 73);
+    
+    const tableData = [];
+    const fmt = (val) => `INR ${(val || 0).toLocaleString("en-IN")}`;
+
+    if (activeTab === "overview") {
+      tableData.push(["Total Revenue", fmt(data.revenue?.total)]);
+      tableData.push(["Monthly Revenue", fmt(data.revenue?.thisMonth)]);
+      tableData.push(["Total Orders", data.orders?.total?.toString()]);
+      tableData.push(["Total Users", data.users?.total?.toString()]);
+      tableData.push(["Room Occupancy", `${data.rooms?.occupancyRate}%`]);
+    } else if (activeTab === "revenue") {
+      tableData.push(["Total Revenue", fmt(data.revenue?.total)]);
+      tableData.push(["Monthly Growth", `${data.revenue?.growth}%`]);
+      tableData.push(["Target Progress", `${Math.min(Math.round((data.revenue?.thisMonth/data.revenue?.target)*100),100)}%`]);
+    } else if (activeTab === "orders") {
+      tableData.push(["Total Orders", data.orders?.total?.toString()]);
+      tableData.push(["Completed Orders", data.orders?.completed?.toString()]);
+      tableData.push(["Average Order Value", fmt(data.orders?.avgValue)]);
+    }
+    
+    autoTable(doc, {
+      startY: 80,
+      head: [["Performance Metric", "Statistical Value"]],
+      body: tableData.length > 0 ? tableData : [["No data available", "-"]],
+      theme: "striped",
+      headStyles: { 
+        fillColor: [31, 41, 55], 
+        textColor: [255, 255, 255],
+        fontSize: 11,
+        fontStyle: "bold",
+        halign: "left"
+      },
+      bodyStyles: {
+        fontSize: 10,
+        textColor: [55, 65, 81],
+        cellPadding: 6
+      },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 100 },
+        1: { halign: "right" }
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251]
+      }
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.text("SwadBox PG Management System - Confidential Business Report", 105, 285, { align: "center" });
+      doc.text(`Page ${i} of ${pageCount}`, 190, 285, { align: "right" });
+    }
+    
+    doc.save(`SiyaPG_Report_${activeTab}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   // ── Helpers ──────────────────────────────────────────────
@@ -170,12 +261,20 @@ const Reports = () => {
             Comprehensive overview of your business performance
           </p>
         </div>
-        <button
-          onClick={fetchReportData}
-          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 rounded-xl hover:bg-orange-100 transition-all"
-        >
-          <FiRefreshCw /> Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={downloadPdfReport}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-800 rounded-xl hover:bg-gray-900 transition-all shadow-md"
+          >
+            <FiPackage /> Download PDF
+          </button>
+          <button
+            onClick={fetchReportData}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-orange-600 bg-orange-50 rounded-xl hover:bg-orange-100 transition-all"
+          >
+            <FiRefreshCw /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -329,12 +428,6 @@ const Reports = () => {
                     <span className="text-gray-500">Pending</span>
                     <span className="font-semibold text-amber-600">
                       {formatCurrency(data.billing?.totalPending)} ({data.billing?.pendingCount})
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Overdue</span>
-                    <span className="font-semibold text-red-600">
-                      {formatCurrency(data.billing?.totalOverdue)} ({data.billing?.overdueCount})
                     </span>
                   </div>
                 </div>

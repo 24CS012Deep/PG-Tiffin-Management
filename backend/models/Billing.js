@@ -24,13 +24,30 @@ const billingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "paid", "overdue"],
+    enum: ["pending", "paid"],
     default: "pending"
   },
   dueDate: Date,
   paidAt: Date,
   paymentMethod: String,
   transactionId: String,
+  breakdown: {
+    roomRent: Number,
+    foodCharges: Number,
+    mealCounts: {
+      breakfast: Number,
+      lunch: Number,
+      dinner: Number
+    },
+    dailyRecords: Array, // Optional detailed breakdown
+    // Customer specific fields
+    customerOrder: {
+      items: String,
+      quantity: Number,
+      address: String,
+      planNumber: String
+    }
+  },
   generatedAt: { 
     type: Date, 
     default: Date.now 

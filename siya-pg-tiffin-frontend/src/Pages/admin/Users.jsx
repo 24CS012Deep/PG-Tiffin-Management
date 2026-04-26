@@ -3,7 +3,7 @@ import API from "../../utils/api";
 import { 
   FiUsers, FiSearch, FiUser, FiMail, FiPhone, FiCalendar, FiFilter, 
   FiX, FiChevronLeft, FiChevronRight, FiUserPlus, FiRefreshCw, FiShield,
-  FiUserX, FiUserCheck, FiEye
+  FiUserX, FiUserCheck, FiEye, FiMapPin
 } from "react-icons/fi";
 
 const Users = () => {
@@ -256,6 +256,16 @@ const Users = () => {
                           <p className="text-gray-400 text-xs flex items-center gap-1">
                             <FiMail className="text-[10px]" /> {user.email}
                           </p>
+                          {user.address && (
+                            <a 
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(user.address)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-orange-500 hover:text-orange-600 font-bold flex items-center gap-1 mt-1 transition-colors"
+                            >
+                              <FiMapPin className="text-[10px]" /> Map View
+                            </a>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -485,6 +495,12 @@ const Users = () => {
                   <div className="flex justify-between py-2 border-b border-gray-100">
                     <span className="text-gray-500">Address</span>
                     <span className="text-gray-700 text-right">{selectedUser.address}</span>
+                  </div>
+                )}
+                {selectedUser.deliveryPreference && (
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-500">Preference</span>
+                    <span className="text-gray-700 font-semibold capitalize">{selectedUser.deliveryPreference}</span>
                   </div>
                 )}
               </div>
