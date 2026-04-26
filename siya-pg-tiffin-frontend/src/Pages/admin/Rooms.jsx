@@ -46,6 +46,7 @@ const Rooms = () => {
     bedType: "single", // single, double, triple
     roomType: "non-ac",
     balcony: false,
+    amenities: [],
   });
 
   const bedTypeOptions = [
@@ -540,6 +541,7 @@ const Rooms = () => {
                     className="w-full border rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-orange-500 text-sm"
                   >
                     <option value="non-ac">Non-AC Room (Standard)</option>
+                    <option value="ac">AC Room (Premium)</option>
                   </select>
                 </div>
 

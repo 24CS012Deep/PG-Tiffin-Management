@@ -422,7 +422,7 @@ const TiffinPlans = () => {
                         className="w-full pl-10 pr-5 py-4 bg-white border border-gray-200 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all"
                         placeholder="0.00"
                         value={formData.tiffinPrice}
-                        onChange={(e) => setFormData({ ...formData, tiffinPrice: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, tiffinPrice: Number(e.target.value) })}
                       />
                     </div>
                   </div>
@@ -436,7 +436,7 @@ const TiffinPlans = () => {
                         className="w-full pl-12 pr-5 py-4 bg-white border border-gray-200 rounded-2xl focus:border-[#FF6B00] focus:ring-4 focus:ring-orange-50 outline-none font-medium text-slate-800 transition-all"
                         placeholder="50"
                         value={formData.maxCapacity}
-                        onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, maxCapacity: Number(e.target.value) })}
                       />
                     </div>
                   </div>
@@ -472,7 +472,7 @@ const TiffinPlans = () => {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-3">Plan Availability</label>
                   <div className="flex gap-3">
-                    {['lunch', 'dinner'].map((shift) => (
+                    {['breakfast', 'lunch', 'dinner'].map((shift) => (
                       <button
                         key={shift}
                         type="button"

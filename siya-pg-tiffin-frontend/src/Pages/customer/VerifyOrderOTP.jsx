@@ -55,7 +55,7 @@ const VerifyOrderOTP = () => {
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         {/* Header */}
         <div className="bg-orange-500 text-white p-6 rounded-t-lg text-center">
-          <div className="text-5xl mb-3">🎉</div>
+          <div className="text-5xl mb-3"></div>
           <h2 className="text-2xl font-bold">Order Delivered!</h2>
           <p className="text-orange-100 mt-2">Verify delivery by entering OTP</p>
         </div>
@@ -72,7 +72,7 @@ const VerifyOrderOTP = () => {
           {/* Success Message */}
           {success && (
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-600 text-sm font-semibold">✅ {success}</p>
+              <p className="text-green-600 text-sm font-semibold"> {success}</p>
               <p className="text-green-600 text-xs mt-1">Redirecting to orders...</p>
             </div>
           )}

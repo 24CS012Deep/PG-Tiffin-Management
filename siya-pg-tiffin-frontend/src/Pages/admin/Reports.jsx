@@ -136,7 +136,7 @@ const Reports = () => {
     doc.save(`SiyaPG_Report_${activeTab}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  // ── Helpers ──────────────────────────────────────────────
+  // Helpers
   const formatCurrency = (val) =>
     `₹${(val || 0).toLocaleString("en-IN")}`;
 
@@ -299,7 +299,7 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* ═══════════════ OVERVIEW TAB ═══════════════ */}
+      {/* OVERVIEW TAB */}
       {activeTab === "overview" && (
         <div className="space-y-6 animate-fadeIn">
           {/* Hero Stat Cards */}
@@ -503,7 +503,7 @@ const Reports = () => {
         </div>
       )}
 
-      {/* ═══════════════ REVENUE TAB ═══════════════ */}
+      {/* REVENUE TAB */}
       {activeTab === "revenue" && (
         <div className="space-y-6 animate-fadeIn">
           {/* Revenue Hero */}
@@ -639,7 +639,7 @@ const Reports = () => {
         </div>
       )}
 
-      {/* ═══════════════ ORDERS TAB ═══════════════ */}
+      {/* ORDERS TAB */}
       {activeTab === "orders" && (
         <div className="space-y-6 animate-fadeIn">
           {/* Order Summary Cards */}
@@ -758,7 +758,7 @@ const Reports = () => {
         </div>
       )}
 
-      {/* ═══════════════ ROOMS & PG TAB ═══════════════ */}
+      {/* ROOMS & PG TAB */}
       {activeTab === "occupancy" && (
         <div className="space-y-6 animate-fadeIn">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -860,7 +860,7 @@ const Reports = () => {
         </div>
       )}
 
-      {/* ═══════════════ USERS TAB ═══════════════ */}
+      {/* USERS TAB */}
       {activeTab === "users" && (
         <div className="space-y-6 animate-fadeIn">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

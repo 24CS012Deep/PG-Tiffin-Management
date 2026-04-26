@@ -143,7 +143,7 @@ const GenerateBills = () => {
       </head>
       <body>
         <div class="header">
-          <h1>📦 SwadBox - Bill Report</h1>
+          <h1> SwadBox - Bill Report</h1>
           <p>Generated on ${new Date().toLocaleDateString("en-IN", { dateStyle: "full" })}</p>
           <p>Period: ${report?.dateRange?.label} (${new Date(report?.dateRange?.start).toLocaleDateString("en-IN")} – ${new Date(report?.dateRange?.end).toLocaleDateString("en-IN")})</p>
         </div>

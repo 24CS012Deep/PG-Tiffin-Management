@@ -11,7 +11,7 @@ import {
   getUserOrders, 
   cancelOrder,
   verifyOrderOTP
-} from "../controllers/orderController.js";  // ✅ These now exist
+} from "../controllers/orderController.js";  //  These now exist
 import { getUserBillings } from "../controllers/billingController.js";
 import { createQuery, getUserQueries } from "../controllers/queryController.js";
 import { getTiffinPlans, getTiffinHistoryForCustomer } from "../controllers/tiffinController.js";
@@ -26,10 +26,10 @@ router.put("/profile", updateCustomerProfile);
 router.post("/profile/verify-password", verifyCustomerPassword);
 router.get("/tiffin-plans", getTiffinPlans);
 router.get("/tiffin-plans/history", getTiffinHistoryForCustomer);
-router.get("/orders", getUserOrders);           // ✅ Now works
-router.post("/orders", createOrder);             // ✅ Now works
-router.put("/orders/:id/cancel", cancelOrder);   // ✅ Now works
-router.post("/orders/verify-otp", verifyOrderOTP); // ✅ OTP Verification
+router.get("/orders", getUserOrders);           //  Now works
+router.post("/orders", createOrder);             //  Now works
+router.put("/orders/:id/cancel", cancelOrder);   //  Now works
+router.post("/orders/verify-otp", verifyOrderOTP); //  OTP Verification
 router.get("/billings", getUserBillings);
 router.get("/queries", getUserQueries);
 router.post("/queries", createQuery);

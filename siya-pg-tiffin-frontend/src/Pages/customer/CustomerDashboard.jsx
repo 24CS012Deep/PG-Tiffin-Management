@@ -80,7 +80,7 @@ const CustomerDashboard = () => {
         pendingBills: bills.filter((b) => b.status === "pending").length,
         totalQueries: queries.length,
         openQueries: queries.filter((q) => q.status === "open").length,
-        availablePlans: plansRes?.data?.length || 0,
+        availablePlans: (plansRes?.data || []).filter(p => p.isActive).length,
         totalSpent: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
       });
     } catch (err) {

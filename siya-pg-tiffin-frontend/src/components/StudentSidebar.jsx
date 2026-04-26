@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { FiHome, FiUser, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import { FiHome, FiUser, FiLogOut, FiMenu, FiX, FiShoppingBag } from "react-icons/fi";
 import { MdReceiptLong, MdOutlineSupportAgent } from "react-icons/md";
 
 const StudentSidebar = () => {
@@ -11,6 +11,7 @@ const StudentSidebar = () => {
   const menu = [
     { name: "Dashboard", path: "/student", icon: FiHome },
     { name: "My Room", path: "/student/my-room", icon: FiHome },
+    { name: "My Orders", path: "/student/orders", icon: FiShoppingBag },
     { name: "Monthly Bills", path: "/student/bills", icon: MdReceiptLong },
     { name: "Raise Query", path: "/student/raise-query", icon: MdOutlineSupportAgent },
     { name: "Profile", path: "/student/profile", icon: FiUser },

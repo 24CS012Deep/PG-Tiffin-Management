@@ -52,10 +52,7 @@ const StudentMyOrders = () => {
   const filteredOrders = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
   const canCancelOrder = (order) => {
-    if (order.status !== "live") return false;
-    const createdAt = new Date(order.createdAt || order.date).getTime();
-    if (Number.isNaN(createdAt)) return false;
-    return Date.now() - createdAt <= 5 * 60 * 1000;
+    return order.status === "live";
   };
 
   const filters = [
@@ -168,7 +165,7 @@ const StudentMyOrders = () => {
                         {order.tiffinPlan?.name || "Tiffin Order"}
                       </h3>
                       <p className="text-sm text-gray-500 font-medium flex items-center gap-1.5 capitalize">
-                        {order.deliveryTime === 'breakfast' ? '🍳' : order.deliveryTime === 'lunch' ? '🍛' : '🍽'} {order.deliveryTime === 'both' ? 'Lunch & Dinner' : order.deliveryTime}
+                        {order.deliveryTime === 'breakfast' ? '' : order.deliveryTime === 'lunch' ? '🍛' : '🍽'} {order.deliveryTime === 'both' ? 'Lunch & Dinner' : order.deliveryTime}
                       </p>
                     </div>
                     <div className="text-right">
@@ -196,7 +193,7 @@ const StudentMyOrders = () => {
                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${
                         order.paymentStatus === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'
                       }`}>
-                        {order.paymentStatus === 'paid' ? '💰 PAID' : '💰 UNPAID'}
+                        {order.paymentStatus === 'paid' ? ' PAID' : ' UNPAID'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center pt-2 border-t border-gray-200">

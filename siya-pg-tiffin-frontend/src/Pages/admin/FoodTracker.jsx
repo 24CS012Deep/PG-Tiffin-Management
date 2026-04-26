@@ -9,7 +9,7 @@ import {
   MdReceiptLong, MdOutlineRestaurantMenu
 } from "react-icons/md";
 
-/* ── helpers ──────────────────────────────────────────────── */
+/* helpers */
 const getDaysInMonth = (monthStr) => {
   if (!monthStr) return 30;
   const [y, m] = monthStr.split("-").map(Number);
@@ -33,7 +33,7 @@ const dayLabel = (day, monthStr) => {
   return new Date(y, m - 1, day).toLocaleDateString("en-IN", { weekday: "short", day: "numeric" });
 };
 
-/* ── component ────────────────────────────────────────────── */
+/* component */
 const FoodTracker = () => {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -168,7 +168,7 @@ const FoodTracker = () => {
         month
       });
       setPaymentStatus("pending");
-      setSuccess(`✅ Bill generated and email sent to ${selectedStudent.name}!`);
+      setSuccess(` Bill generated and email sent to ${selectedStudent.name}!`);
       setTimeout(() => setSuccess(""), 5000);
     } catch (e) {
       setError(e.response?.data?.message || "Failed to generate bill.");
@@ -183,7 +183,7 @@ const FoodTracker = () => {
     try {
       await API.put(`/admin/meals/${recordId}/status`, { status: "paid", paymentMethod: "manual" });
       setPaymentStatus("paid");
-      setSuccess("✅ Marked as PAID.");
+      setSuccess(" Marked as PAID.");
       setTimeout(() => setSuccess(""), 4000);
     } catch {
       setError("Failed to update status.");

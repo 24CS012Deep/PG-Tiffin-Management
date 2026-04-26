@@ -2,7 +2,7 @@ import Room from "../models/Room.js";
 import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
 
-/* ================= CREATE ROOM ================= */
+/* CREATE ROOM */
 export const createRoom = async (req, res) => {
   try {
     const { roomNumber, capacity, rent, floor, details, amenities } = req.body;
@@ -30,7 +30,7 @@ export const createRoom = async (req, res) => {
   }
 };
 
-/* ================= GET ALL ROOMS ================= */
+/* GET ALL ROOMS */
 export const getAllRooms = async (req, res) => {
   try {
     const rooms = await Room.find().populate("students", "name email");
@@ -40,7 +40,7 @@ export const getAllRooms = async (req, res) => {
   }
 };
 
-/* ================= UPDATE ROOM ================= */
+/* UPDATE ROOM */
 export const updateRoom = async (req, res) => {
   try {
     const { roomNumber, capacity, rent, floor, details, amenities, isAvailable } = req.body;
@@ -65,7 +65,7 @@ export const updateRoom = async (req, res) => {
   }
 };
 
-/* ================= DELETE ROOM ================= */
+/* DELETE ROOM */
 export const deleteRoom = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -82,7 +82,7 @@ export const deleteRoom = async (req, res) => {
   }
 };
 
-/* ================= ASSIGN STUDENT TO ROOM ================= */
+/* ASSIGN STUDENT TO ROOM */
 export const assignStudent = async (req, res) => {
   try {
     const { roomId, studentId } = req.body;
@@ -157,7 +157,7 @@ export const assignStudent = async (req, res) => {
         subject: "Room Assigned - Siya PG",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f97316; border-radius: 10px;">
-            <h2 style="color: #f97316;">🏠 Room Assigned!</h2>
+            <h2 style="color: #f97316;"> Room Assigned!</h2>
             <p>Hello <strong>${student.name}</strong>,</p>
             <p>You have been assigned to a room in Siya PG. Here are your room details:</p>
             <div style="background-color: #fdf8f2; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -174,7 +174,7 @@ export const assignStudent = async (req, res) => {
         `
       });
     } catch (emailError) {
-      console.log("⚠️ Room assignment email failed:", emailError.message);
+      console.log(" Room assignment email failed:", emailError.message);
     }
 
     const updatedRoom = await Room.findById(roomId).populate("students", "name email");
@@ -185,7 +185,7 @@ export const assignStudent = async (req, res) => {
   }
 };
 
-/* ================= REMOVE STUDENT FROM ROOM ================= */
+/* REMOVE STUDENT FROM ROOM */
 export const removeStudent = async (req, res) => {
   try {
     const { roomId, studentId } = req.body;
@@ -220,7 +220,7 @@ export const removeStudent = async (req, res) => {
         `
       });
     } catch (emailError) {
-      console.log("⚠️ Room removal email failed:", emailError.message);
+      console.log(" Room removal email failed:", emailError.message);
     }
 
     const updatedRoom = await Room.findById(roomId).populate("students", "name email");
@@ -230,7 +230,7 @@ export const removeStudent = async (req, res) => {
   }
 };
 
-/* ================= GET STUDENT'S ROOM ================= */
+/* GET STUDENT'S ROOM */
 export const getStudentRoom = async (req, res) => {
   try {
     const studentId = req.user.id;

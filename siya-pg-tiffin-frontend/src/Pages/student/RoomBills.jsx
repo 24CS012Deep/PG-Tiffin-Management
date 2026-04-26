@@ -48,25 +48,25 @@ const RoomBills = () => {
 
   const downloadBill = (billing) => {
     const content = `
-════════════════════════════════════════════
+--------------------------------------------
               SIYA PG - BILL RECEIPT
-════════════════════════════════════════════
+--------------------------------------------
 
 Date Generated: ${new Date().toLocaleDateString("en-IN")}
 Bill ID: ${billing._id}
 
-────────────────────────────────────────────
+--------------------------------------------
   BILLING DETAILS
-────────────────────────────────────────────
+--------------------------------------------
 Month:   ${billing.month}
 Type:    ${billing.type?.toUpperCase()}
 Amount:  ₹${billing.amount?.toLocaleString("en-IN")}
 Status:  ${billing.status?.toUpperCase()}
 ${billing.paidAt ? `Paid On: ${new Date(billing.paidAt).toLocaleDateString("en-IN")}` : ""}
 
-────────────────────────────────────────────
+--------------------------------------------
   Thank you for choosing Siya PG!
-════════════════════════════════════════════
+--------------------------------------------
     `;
     const blob = new Blob([content], { type: "text/plain" });
     const link = document.createElement("a");

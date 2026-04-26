@@ -63,7 +63,7 @@ Response:
 
 **MyOrders.jsx** Integration
 - Added "Verify OTP" button for orders with `deliveryStatus === "delivered"` and `otpVerified === false`
-- Shows "✅ Verified" badge for completed verifications
+- Shows " Verified" badge for completed verifications
 - Displays OTP modal when button is clicked
 - Auto-refreshes orders list after successful verification
 
@@ -89,7 +89,7 @@ getOTPExpirationTime() // Returns date 15 minutes from now
 3. For delivered orders, customer sees "Verify OTP" button
 4. Customer enters OTP in the modal
 5. System verifies OTP:
-   - If correct and not expired: Order marked as verified ✅
+   - If correct and not expired: Order marked as verified 
    - If incorrect: Error message shown
    - If expired: Message to contact delivery personnel
 6. Success email sent to customer
@@ -193,16 +193,16 @@ curl -X POST http://localhost:5000/api/customer/orders/verify-otp \
 ## Files Modified/Created
 
 ### Backend
-- ✅ `models/Order.js` - Added OTP fields
-- ✅ `utils/generateOTP.js` - New OTP utility
-- ✅ `controllers/orderController.js` - Updated orderStatus and added verifyOrderOTP
-- ✅ `routes/customerRoutes.js` - Added OTP verification route
-- ✅ `routes/studentRoutes.js` - Added order and OTP routes
+-  `models/Order.js` - Added OTP fields
+-  `utils/generateOTP.js` - New OTP utility
+-  `controllers/orderController.js` - Updated orderStatus and added verifyOrderOTP
+-  `routes/customerRoutes.js` - Added OTP verification route
+-  `routes/studentRoutes.js` - Added order and OTP routes
 
 ### Frontend
-- ✅ `components/OTPVerificationModal.jsx` - New modal component
-- ✅ `Pages/customer/VerifyOrderOTP.jsx` - New full-page component
-- ✅ `Pages/customer/MyOrders.jsx` - Integrated OTP verification
+-  `components/OTPVerificationModal.jsx` - New modal component
+-  `Pages/customer/VerifyOrderOTP.jsx` - New full-page component
+-  `Pages/customer/MyOrders.jsx` - Integrated OTP verification
 
 ## Troubleshooting
 

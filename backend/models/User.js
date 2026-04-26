@@ -59,9 +59,9 @@ userSchema.pre("save", async function() {
     console.log("🔐 Hashing password for:", this.email);
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    console.log("✅ Password hashed successfully");
+    console.log(" Password hashed successfully");
   } catch (error) {
-    console.error("❌ Error hashing password:", error);
+    console.error(" Error hashing password:", error);
     throw error;
   }
 });

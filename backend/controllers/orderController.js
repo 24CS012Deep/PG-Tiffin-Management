@@ -5,10 +5,10 @@ import Billing from "../models/Billing.js";
 import sendEmail from "../utils/sendEmail.js";
 import { generateOTP, getOTPExpirationTime } from "../utils/generateOTP.js";
 
-/* ================= CREATE ORDER (CUSTOMER) ================= */
+/* CREATE ORDER (CUSTOMER) */
 export const createOrder = async (req, res) => {
   try {
-    console.log("📝 Creating order for customer:", req.user.id);
+    console.log(" Creating order for customer:", req.user.id);
     
     const { tiffinPlan, date, items, quantity, deliveryTime, deliveryAddress, specialInstructions } = req.body;
     
@@ -18,10 +18,12 @@ export const createOrder = async (req, res) => {
     }
 
     // Check if user already ordered this plan for this date
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
     const existingOrder = await Order.findOne({
       customer: req.user.id,
       tiffinPlan,
-      date: date || new Date().toISOString().split('T')[0],
+      date: date || todayStr,
       status: { $ne: "cancelled" }
     });
 
@@ -40,8 +42,19 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "This plan is not currently active" });
     }
 
+    // Check Capacity
+    const currentOrdersCount = await Order.countDocuments({ 
+      tiffinPlan: plan._id, 
+      status: { $ne: "cancelled" } 
+    });
+    
+    if (currentOrdersCount + (quantity || 1) > plan.maxCapacity) {
+      return res.status(400).json({ 
+        message: `Sorry, this plan is sold out. (${currentOrdersCount}/${plan.maxCapacity} orders filled)` 
+      });
+    }
+
     // Check Date constraints
-    const todayStr = new Date().toISOString().split('T')[0];
     if (plan.date && plan.date < todayStr) {
       return res.status(400).json({ message: "This plan has expired and is no longer available." });
     }
@@ -72,7 +85,7 @@ export const createOrder = async (req, res) => {
         subject: "Order Confirmation - SwadBox",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ff8c00; border-radius: 10px;">
-            <h2 style="color: #ff8c00;">Order Confirmed! 🎉</h2>
+            <h2 style="color: #ff8c00;">Order Confirmed! </h2>
             <p>Hello <strong>${customer.name}</strong>,</p>
             <p>Your order has been placed successfully.</p>
             
@@ -90,7 +103,7 @@ export const createOrder = async (req, res) => {
         `
       });
     } catch (emailError) {
-      console.log("⚠️ Order confirmation email failed:", emailError.message);
+      console.log(" Order confirmation email failed:", emailError.message);
     }
 
     // Return populated order
@@ -100,12 +113,12 @@ export const createOrder = async (req, res) => {
 
     res.status(201).json(populatedOrder);
   } catch (error) {
-    console.error("❌ Create order error:", error);
+    console.error(" Create order error:", error);
     res.status(500).json({ message: "Failed to create order" });
   }
 };
 
-/* ================= VERIFY ORDER OTP (ADMIN/CUSTOMER) ================= */
+/* VERIFY ORDER OTP (ADMIN/CUSTOMER) */
 export const verifyOrderOTP = async (req, res) => {
   try {
     const { orderId, otp } = req.body;
@@ -132,26 +145,44 @@ export const verifyOrderOTP = async (req, res) => {
     order.paymentStatus = "unpaid"; // Move to unpaid after delivery
     await order.save();
 
-    // Create billing entry
-    const billMonth = new Date(order.date).toLocaleString("en-IN", { month: "long", year: "numeric" });
-    await Billing.create({
+    // Aggregated billing entry (Monthly)
+    const orderDate = new Date(order.date);
+    const billMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Find existing bill for this user, month and type
+    const existingBill = await Billing.findOne({
       user: order.customer._id,
       month: billMonth,
-      amount: order.totalAmount,
-      type: "tiffin",
-      status: "pending",
-      details: `Tiffin order ${order.tiffinPlan.planNumber} delivered on ${new Date(order.date).toLocaleDateString()}`,
-      breakdown: {
-        customerOrder: {
-          items: order.items.join(", "),
-          quantity: order.quantity,
-          address: order.deliveryAddress,
-          planNumber: order.tiffinPlan.planNumber
-        }
-      }
+      type: "tiffin"
     });
 
-    console.log(`✅ OTP verified and order completed for: ${orderId}`);
+    if (existingBill) {
+      // Add to existing bill
+      existingBill.amount += order.totalAmount;
+      existingBill.details += ` | Tiffin ${order.tiffinPlan.planNumber} (${orderDate.toLocaleDateString()})`;
+      // Update breakdown if needed
+      await existingBill.save();
+    } else {
+      // Create new monthly aggregator
+      await Billing.create({
+        user: order.customer._id,
+        month: billMonth,
+        amount: order.totalAmount,
+        type: "tiffin",
+        status: "pending",
+        details: `Tiffin order ${order.tiffinPlan.planNumber} delivered on ${orderDate.toLocaleDateString()}`,
+        breakdown: {
+          customerOrder: {
+            items: order.items.join(", "),
+            quantity: order.quantity,
+            address: order.deliveryAddress,
+            planNumber: order.tiffinPlan.planNumber
+          }
+        }
+      });
+    }
+
+    console.log(` OTP verified and order completed for: ${orderId}`);
 
     res.json({
       success: true,
@@ -159,12 +190,12 @@ export const verifyOrderOTP = async (req, res) => {
       order
     });
   } catch (error) {
-    console.error("❌ Verify OTP error:", error);
+    console.error(" Verify OTP error:", error);
     res.status(500).json({ message: "Failed to verify OTP" });
   }
 };
 
-/* ================= VERIFY PAYMENT (ADMIN) ================= */
+/* VERIFY PAYMENT (ADMIN) */
 export const verifyPayment = async (req, res) => {
   try {
     const { orderId } = req.body;
@@ -183,7 +214,7 @@ export const verifyPayment = async (req, res) => {
         subject: "Payment Confirmed - SwadBox",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #22c55e; border-radius: 10px;">
-            <h2 style="color: #22c55e;">Payment Received! ✅</h2>
+            <h2 style="color: #22c55e;">Payment Received! </h2>
             <p>Hello <strong>${order.customer.name}</strong>,</p>
             <p>We have received your payment for order <strong>${order.tiffinPlan.planNumber}</strong>.</p>
             <p><strong>Amount Paid:</strong> ₹${order.totalAmount}</p>
@@ -192,17 +223,17 @@ export const verifyPayment = async (req, res) => {
         `
       });
     } catch (emailError) {
-      console.log("⚠️ Payment confirmation email failed:", emailError.message);
+      console.log(" Payment confirmation email failed:", emailError.message);
     }
 
     res.json({ success: true, message: "Payment verified successfully", order });
   } catch (error) {
-    console.error("❌ Verify payment error:", error);
+    console.error(" Verify payment error:", error);
     res.status(500).json({ message: "Failed to verify payment" });
   }
 };
 
-/* ================= GET USER ORDERS (CUSTOMER/STUDENT) ================= */
+/* GET USER ORDERS (CUSTOMER/STUDENT) */
 export const getUserOrders = async (req, res) => {
   try {
     const { status } = req.query;
@@ -218,7 +249,7 @@ export const getUserOrders = async (req, res) => {
   }
 };
 
-/* ================= GET ALL ORDERS (ADMIN) ================= */
+/* GET ALL ORDERS (ADMIN) */
 export const getAllOrders = async (req, res) => {
   try {
     const { status } = req.query;
@@ -235,7 +266,7 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-/* ================= SEND ORDER OTP (ADMIN) ================= */
+/* SEND ORDER OTP (ADMIN) */
 export const sendOrderOTP = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate("customer").populate("tiffinPlan");
@@ -259,7 +290,7 @@ export const sendOrderOTP = async (req, res) => {
   }
 };
 
-/* ================= UPDATE ORDER STATUS (ADMIN) ================= */
+/* UPDATE ORDER STATUS (ADMIN) */
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -271,7 +302,7 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-/* ================= CANCEL ORDER (CUSTOMER/STUDENT) ================= */
+/* CANCEL ORDER (CUSTOMER/STUDENT) */
 export const cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -294,7 +325,7 @@ export const cancelOrder = async (req, res) => {
   }
 };
 
-/* ================= DELETE ORDER (ADMIN) ================= */
+/* DELETE ORDER (ADMIN) */
 export const deleteOrder = async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);

@@ -6,7 +6,7 @@ import sendEmail from "../utils/sendEmail.js";
 // @access  Public
 export const submitContact = async (req, res) => {
   try {
-    console.log("📝 Contact form submission:", req.body);
+    console.log(" Contact form submission:", req.body);
 
     const { name, email, phone, message } = req.body;
 
@@ -27,7 +27,7 @@ export const submitContact = async (req, res) => {
       message: message || "",
     });
 
-    console.log("✅ Contact inquiry saved:", inquiry._id);
+    console.log(" Contact inquiry saved:", inquiry._id);
 
     // Send email notification to admin
     try {
@@ -48,7 +48,7 @@ export const submitContact = async (req, res) => {
         `,
       });
     } catch (emailError) {
-      console.log("⚠️ Admin notification email failed:", emailError.message);
+      console.log(" Admin notification email failed:", emailError.message);
     }
 
    
@@ -74,7 +74,7 @@ export const submitContact = async (req, res) => {
         `,
       });
     } catch (emailError) {
-      console.log("⚠️ User confirmation email failed:", emailError.message);
+      console.log(" User confirmation email failed:", emailError.message);
     }
 
     res.status(201).json({
@@ -83,7 +83,7 @@ export const submitContact = async (req, res) => {
       data: inquiry,
     });
   } catch (error) {
-    console.error("❌ Contact submission error:", error);
+    console.error(" Contact submission error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to submit inquiry",
@@ -96,7 +96,7 @@ export const submitContact = async (req, res) => {
 // @access  Public
 export const submitSchedule = async (req, res) => {
   try {
-    console.log("📅 Schedule visit submission:", req.body);
+    console.log(" Schedule visit submission:", req.body);
 
     const { name, email, phone, date, time, message } = req.body;
 
@@ -119,7 +119,7 @@ export const submitSchedule = async (req, res) => {
       message: message || "",
     });
 
-    console.log("✅ Schedule inquiry saved:", inquiry._id);
+    console.log(" Schedule inquiry saved:", inquiry._id);
 
     // Send email notification to admin
     try {
@@ -142,7 +142,7 @@ export const submitSchedule = async (req, res) => {
         `,
       });
     } catch (emailError) {
-      console.log("⚠️ Admin notification email failed:", emailError.message);
+      console.log(" Admin notification email failed:", emailError.message);
     }
 
     // Send confirmation email to user
@@ -174,7 +174,7 @@ export const submitSchedule = async (req, res) => {
         `,
       });
     } catch (emailError) {
-      console.log("⚠️ User confirmation email failed:", emailError.message);
+      console.log(" User confirmation email failed:", emailError.message);
     }
 
     res.status(201).json({
@@ -183,7 +183,7 @@ export const submitSchedule = async (req, res) => {
       data: inquiry,
     });
   } catch (error) {
-    console.error("❌ Schedule submission error:", error);
+    console.error(" Schedule submission error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to submit schedule request",
@@ -203,7 +203,7 @@ export const getAllInquiries = async (req, res) => {
       data: inquiries,
     });
   } catch (error) {
-    console.error("❌ Get inquiries error:", error);
+    console.error(" Get inquiries error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch inquiries",
@@ -228,7 +228,7 @@ export const getInquiryById = async (req, res) => {
       data: inquiry,
     });
   } catch (error) {
-    console.error("❌ Get inquiry error:", error);
+    console.error(" Get inquiry error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch inquiry",
@@ -265,7 +265,7 @@ export const updateInquiryStatus = async (req, res) => {
       data: inquiry,
     });
   } catch (error) {
-    console.error("❌ Update inquiry error:", error);
+    console.error(" Update inquiry error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update inquiry",

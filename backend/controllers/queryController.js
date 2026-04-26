@@ -38,7 +38,7 @@ export const createQuery = async (req, res) => {
         });
       }
     } catch (emailError) {
-      console.log("⚠️ Admin notification email failed:", emailError.message);
+      console.log(" Admin notification email failed:", emailError.message);
     }
 
     res.status(201).json(query);
@@ -98,7 +98,7 @@ export const answerQuery = async (req, res) => {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
             <div style="background: linear-gradient(135deg, #f97316, #ea580c); padding: 25px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 22px;">🏠 Siya PG Support</h1>
+              <h1 style="color: white; margin: 0; font-size: 22px;"> Siya PG Support</h1>
               <p style="color: #fed7aa; margin: 5px 0 0 0; font-size: 13px;">Your query has been resolved</p>
             </div>
             <div style="padding: 25px;">
@@ -111,7 +111,7 @@ export const answerQuery = async (req, res) => {
               </div>
               
               <div style="background-color: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
-                <p style="color: #166534; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0;">✅ Response</p>
+                <p style="color: #166534; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0;"> Response</p>
                 <p style="color: #374151; margin: 0;">${answer}</p>
               </div>
               
@@ -124,7 +124,7 @@ export const answerQuery = async (req, res) => {
         `
       });
     } catch (emailError) {
-      console.log("⚠️ Query answer email failed:", emailError.message);
+      console.log(" Query answer email failed:", emailError.message);
     }
 
     res.json(query);

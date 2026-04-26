@@ -39,6 +39,18 @@ const MyOrders = () => {
     }
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (window.confirm("Are you sure you want to cancel this order?")) {
+      try {
+        await API.put(`/customer/orders/${orderId}/cancel`);
+        alert("Order cancelled successfully");
+        fetchOrders();
+      } catch (err) {
+        alert(err.response?.data?.message || "Failed to cancel order");
+      }
+    }
+  };
+
   const filteredOrders = orders; // No more client-side filtering needed
 
   if (loading) {
@@ -172,6 +184,12 @@ const MyOrders = () => {
                           <MdDeliveryDining size={16} className="text-orange-400" />
                           Out for Delivery
                         </div>
+                        <button 
+                          onClick={() => handleCancelOrder(order._id)}
+                          className="w-full mt-4 py-3 bg-red-50 text-red-500 rounded-xl font-bold text-[10px] uppercase tracking-widest border border-red-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                        >
+                          <FiXCircle size={14} /> Cancel Order
+                        </button>
                       </>
                     )}
 

@@ -33,11 +33,11 @@ app.use("/api/inquiry", inquiryRoutes);
 app.use("/api/public", publicRoutes);
 
 app.get("/", (req, res) => {
-  res.send("🚀 SwadBox API Running");
+  res.send(" SwadBox API Running");
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(` Server running on port ${PORT}`);
 });

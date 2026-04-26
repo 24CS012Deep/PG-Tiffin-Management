@@ -27,9 +27,10 @@ const Users = () => {
     name: "",
     email: "",
     password: "",
-    role: "customer",
+    role: "admin",
     phone: "",
-    address: ""
+    address: "",
+    roomNumber: ""
   });
 
   useEffect(() => {
@@ -61,9 +62,10 @@ const Users = () => {
         name: "",
         email: "",
         password: "",
-        role: "customer",
+        role: "admin",
         phone: "",
-        address: ""
+        address: "",
+        roomNumber: ""
       });
       alert("User added successfully!");
     } catch (err) {
@@ -418,15 +420,38 @@ const Users = () => {
                 />
                 <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={addForm.phone}
+                    onChange={(e) => setAddForm({...addForm, phone: e.target.value})}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    placeholder="e.g. 9876543210"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Internal Role</label>
+                  <select
+                    value={addForm.role}
+                    onChange={(e) => setAddForm({...addForm, role: e.target.value})}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none bg-orange-50 font-bold text-orange-700"
+                  >
+                    <option value="admin">Admin / Sub-Admin</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                <select
-                  value={addForm.role}
-                  onChange={(e) => setAddForm({...addForm, role: e.target.value})}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
-                >
-                  <option value="admin">Admin</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Permanent Address</label>
+                <textarea
+                  value={addForm.address}
+                  onChange={(e) => setAddForm({...addForm, address: e.target.value})}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none"
+                  rows="2"
+                  placeholder="Street, City, State, ZIP"
+                />
               </div>
               <div className="flex gap-3 pt-2">
                 <button

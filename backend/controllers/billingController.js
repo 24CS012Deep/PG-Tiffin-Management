@@ -3,7 +3,7 @@ import Order from "../models/Order.js";
 import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
 
-/* ================= GET USER BILLINGS (for students/customers) ================= */
+/* GET USER BILLINGS (for students/customers) */
 export const getUserBillings = async (req, res) => {
   try {
     const billings = await Billing.find({ user: req.user.id })
@@ -15,7 +15,7 @@ export const getUserBillings = async (req, res) => {
   }
 };
 
-/* ================= GET ALL BILLINGS (ADMIN) ================= */
+/* GET ALL BILLINGS (ADMIN) */
 export const getAllBillings = async (req, res) => {
   try {
     const billings = await Billing.find()
@@ -27,7 +27,7 @@ export const getAllBillings = async (req, res) => {
   }
 };
 
-/* ================= GENERATE BILLS ================= */
+/* GENERATE BILLS */
 export const generateBills = async (req, res) => {
   try {
     const { periodType, singleMonth, fromMonth, toMonth, type, studentSelection, specificStudents } = req.body;
@@ -179,7 +179,7 @@ export const generateBills = async (req, res) => {
   }
 };
 
-/* ================= UPDATE BILLING STATUS ================= */
+/* UPDATE BILLING STATUS */
 export const updateBillingStatus = async (req, res) => {
   try {
     const { status, paymentMethod, transactionId } = req.body;
@@ -223,7 +223,7 @@ export const updateBillingStatus = async (req, res) => {
           subject: "Payment Received - Siya PG",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f97316; border-radius: 10px;">
-              <h2 style="color: #16a34a;">✅ Payment Received!</h2>
+              <h2 style="color: #16a34a;"> Payment Received!</h2>
               <p>Hello <strong>${billing.user.name}</strong>,</p>
               <p>Your payment has been received and confirmed. Thank you!</p>
               <div style="background-color: #f0fdf4; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -231,7 +231,7 @@ export const updateBillingStatus = async (req, res) => {
                 <p><strong>Month:</strong> ${billing.month}</p>
                 <p><strong>Type:</strong> ${billing.type}</p>
                 <p><strong>Amount:</strong> ₹${billing.amount?.toLocaleString("en-IN")}</p>
-                <p><strong>Status:</strong> Paid ✅</p>
+                <p><strong>Status:</strong> Paid </p>
                 <p><strong>Date:</strong> ${new Date().toLocaleDateString("en-IN", { dateStyle: "long" })}</p>
               </div>
               <p>Thank you for your timely payment!</p>
@@ -241,7 +241,7 @@ export const updateBillingStatus = async (req, res) => {
           `
         });
       } catch (emailError) {
-        console.log("⚠️ Payment confirmation email failed:", emailError.message);
+        console.log(" Payment confirmation email failed:", emailError.message);
       }
     }
 
@@ -250,10 +250,10 @@ export const updateBillingStatus = async (req, res) => {
       try {
         await sendEmail({
           to: billing.user.email,
-          subject: "⚠️ Payment Overdue - Siya PG",
+          subject: " Payment Overdue - Siya PG",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #dc2626; border-radius: 10px;">
-              <h2 style="color: #dc2626;">⚠️ Payment Overdue</h2>
+              <h2 style="color: #dc2626;"> Payment Overdue</h2>
               <p>Hello <strong>${billing.user.name}</strong>,</p>
               <p>This is a reminder that your payment is <strong>overdue</strong>. Please make the payment as soon as possible to avoid any inconvenience.</p>
               <div style="background-color: #fef2f2; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -261,7 +261,7 @@ export const updateBillingStatus = async (req, res) => {
                 <p><strong>Month:</strong> ${billing.month}</p>
                 <p><strong>Type:</strong> ${billing.type}</p>
                 <p><strong>Amount Due:</strong> ₹${billing.amount?.toLocaleString("en-IN")}</p>
-                <p><strong>Status:</strong> ⚠️ Overdue</p>
+                <p><strong>Status:</strong>  Overdue</p>
               </div>
               <p>Please contact the administration if you have any questions regarding this bill.</p>
               <hr>
@@ -270,7 +270,7 @@ export const updateBillingStatus = async (req, res) => {
           `
         });
       } catch (emailError) {
-        console.log("⚠️ Overdue notification email failed:", emailError.message);
+        console.log(" Overdue notification email failed:", emailError.message);
       }
     }
 
@@ -280,7 +280,7 @@ export const updateBillingStatus = async (req, res) => {
   }
 };
 
-/* ================= SEND BILL EMAIL ================= */
+/* SEND BILL EMAIL */
 export const sendBillEmail = async (req, res) => {
   try {
     const billing = await Billing.findById(req.params.id).populate("user", "name email role");
@@ -288,7 +288,7 @@ export const sendBillEmail = async (req, res) => {
     if (!billing.user?.email) return res.status(400).json({ message: "User email not found" });
 
     const statusColor = billing.status === "paid" ? "#16a34a" : "#ca8a04";
-    const statusLabel = billing.status === "paid" ? "✅ Paid" : "⏳ Pending";
+    const statusLabel = billing.status === "paid" ? " Paid" : " Pending";
 
     await sendEmail({
       to: billing.user.email,
@@ -296,7 +296,7 @@ export const sendBillEmail = async (req, res) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
           <div style="background: linear-gradient(135deg, #f97316, #ea580c); padding: 25px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">🏠 Siya PG</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;"> Siya PG</h1>
             <p style="color: #fed7aa; margin: 5px 0 0 0; font-size: 14px;">Monthly Bill Statement</p>
           </div>
           <div style="padding: 25px;">
@@ -323,7 +323,7 @@ export const sendBillEmail = async (req, res) => {
               ${billing.paidAt ? `<tr style="background-color: #f9fafb;"><td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Paid On</td><td style="padding: 12px; border: 1px solid #e5e7eb;">${new Date(billing.paidAt).toLocaleDateString("en-IN", { dateStyle: "long" })}</td></tr>` : ""}
             </table>
             
-            ${billing.status !== "paid" ? '<p style="color: #dc2626; font-weight: 600;">Please make the payment at the earliest to avoid late fees.</p>' : '<p style="color: #16a34a;">Thank you for your timely payment! 🎉</p>'}
+            ${billing.status !== "paid" ? '<p style="color: #dc2626; font-weight: 600;">Please make the payment at the earliest to avoid late fees.</p>' : '<p style="color: #16a34a;">Thank you for your timely payment! </p>'}
             
             <p style="color: #6b7280; font-size: 13px; margin-top: 20px;">For any queries, please contact the PG administration.</p>
           </div>
@@ -341,7 +341,7 @@ export const sendBillEmail = async (req, res) => {
   }
 };
 
-/* ================= DELETE BILLING ================= */
+/* DELETE BILLING */
 export const deleteBilling = async (req, res) => {
   try {
     const billing = await Billing.findByIdAndDelete(req.params.id);
@@ -352,7 +352,7 @@ export const deleteBilling = async (req, res) => {
   }
 };
 
-/* ================= RESET OLD HISTORY ================= */
+/* RESET OLD HISTORY */
 export const resetOldHistory = async (req, res) => {
   try {
     const thirtyDaysAgo = new Date();

@@ -7,7 +7,7 @@ The order display now shows a complete visual progression of the order journey f
 ## Status Flow Progression
 
 ```
-📋 Placed  ──→  📦 Received  ──→  ✅ Verified
+📋 Placed  --→   Received  --→   Verified
 (Always)        (When delivered)   (When OTP verified)
 ```
 
@@ -16,9 +16,9 @@ The order display now shows a complete visual progression of the order journey f
 | Status | Badge | Description | Next Action |
 |--------|-------|-------------|------------|
 | **📋 Live** | "Order placed" | Order is live/active | Wait for delivery |
-| **📦 Received** | "Pending confirmation" | Order delivered, OTP sent | ⚠️ **Confirm Receipt** (pulses) |
-| **✅ Verified** | "Order confirmed" | OTP verified successfully | Order complete ✅ |
-| **❌ Cancelled** | "Cancelled" | Order was cancelled | No action needed |
+| ** Received** | "Pending confirmation" | Order delivered, OTP sent |  **Confirm Receipt** (pulses) |
+| ** Verified** | "Order confirmed" | OTP verified successfully | Order complete  |
+| ** Cancelled** | "Cancelled" | Order was cancelled | No action needed |
 
 ## Visual Components Added
 
@@ -31,37 +31,37 @@ Shows the order journey with animated progress connectors:
 
 ### 2. Status Badge with Sub-label
 ```
-┌─────────────────────────┐
-│ 📦 Received             │
++-------------------------+
+│  Received             │
 │ Pending confirmation    │
-└─────────────────────────┘
++-------------------------+
 ```
 
 ### 3. Pending Confirmation Banner
 Shows when order is received but not yet verified:
 ```
-┌──────────────────────────────────────────┐
-│ 📦 Order Received - Pending Confirmation │
++------------------------------------------+
+│  Order Received - Pending Confirmation │
 │ Your order has been delivered. Please    │
 │ confirm by entering the OTP sent to your │
 │ email.                                    │
-└──────────────────────────────────────────┘
++------------------------------------------+
 ```
 
 ### 4. Order Confirmed Banner
 Shows after successful OTP verification:
 ```
-┌──────────────────────────────────────────┐
-│ ✅ Order Confirmed                       │
++------------------------------------------+
+│  Order Confirmed                       │
 │ Thank you for confirming the delivery.   │
 │ Your order is complete.                  │
-└──────────────────────────────────────────┘
++------------------------------------------+
 ```
 
 ### 5. Action Button
 - **Live Order & Cancelable**: Red "Cancel" button
 - **Delivered & Unverified**: Amber **"🔐 Confirm Receipt"** button (pulsing with animation)
-- **Verified**: Green "✅ Verified" badge
+- **Verified**: Green " Verified" badge
 
 ## Flow Diagram
 
@@ -69,19 +69,19 @@ Shows after successful OTP verification:
 Customer Places Order
          ↓
     📋 LIVE (Status Badge)
-    └─ [Cancel Button]
+    +- [Cancel Button]
          ↓
    Admin Marks as Delivered
     OTP Generated & Sent to Email
          ↓
-    📦 RECEIVED (Status Badge) ⚠️
-    └─ [🔐 Confirm Receipt] ← Pulsing Button
-    └─ Pending Confirmation Alert
+     RECEIVED (Status Badge) 
+    +- [🔐 Confirm Receipt] ← Pulsing Button
+    +- Pending Confirmation Alert
          ↓
    Customer Enters OTP
          ↓
-    ✅ VERIFIED (Status Badge)
-    └─ Order Confirmed Alert
+     VERIFIED (Status Badge)
+    +- Order Confirmed Alert
          ↓
     ORDER COMPLETE ✓
 ```
@@ -122,11 +122,11 @@ order.otpVerified     // true/false
 ### As Customer
 
 1. **I place order** → See 📋 "Live" status
-2. **Admin marks delivered** → See 📦 "Received" status
+2. **Admin marks delivered** → See  "Received" status
 3. **Email arrives with OTP** → See "Pending confirmation" banner & pulsing button
 4. **I click "Confirm Receipt"** → OTP modal opens
-5. **I enter OTP** → Success! See ✅ "Order Confirmed" status
-6. **Order complete** → All done! 🎉
+5. **I enter OTP** → Success! See  "Order Confirmed" status
+6. **Order complete** → All done! 
 
 ### Visual Indicators
 
@@ -141,11 +141,11 @@ order.otpVerified     // true/false
 
 | Color | Meaning |
 |-------|---------|
-| 🟢 Green | ✅ Completed/Verified |
-| 🟡 Amber | ⚠️ Action Required |
+| 🟢 Green |  Completed/Verified |
+| 🟡 Amber |  Action Required |
 | 🟣 Blue | ℹ️ Information |
-| 🔴 Red | ❌ Cancelled |
-| ⚫ Gray | ⏳ Pending |
+| 🔴 Red |  Cancelled |
+| ⚫ Gray |  Pending |
 
 ## Button States
 
@@ -153,7 +153,7 @@ order.otpVerified     // true/false
 |-------|-------------|-----------|------|
 | Live & Cancelable | Red | Default | ✕ Cancel |
 | Delivered & Pending | Amber | Pulse | 🔐 Confirm Receipt |
-| Verified | Green | Default | ✅ Verified |
+| Verified | Green | Default |  Verified |
 
 ## Testing the Visual Flow
 
@@ -164,22 +164,22 @@ order.otpVerified     // true/false
    - ✓ Progress bar shows step 1 highlighted
 
 2. Admin marks as delivered
-   - ✓ Status changes to "📦 Received"
+   - ✓ Status changes to " Received"
    - ✓ "Pending confirmation" banner appears
    - ✓ "🔐 Confirm Receipt" button pulses
    - ✓ Progress bar shows step 2 highlighted & pulsing
 
 3. Customer verifies OTP
-   - ✓ Status changes to "✅ Verified"
+   - ✓ Status changes to " Verified"
    - ✓ "Order Confirmed" banner appears
    - ✓ Progress bar shows all 3 steps complete (green)
 
 ### Test Scenario 2: Cancel Order
 
 1. Customer cancels within 5 minutes
-   - ✓ Status shows "❌ Cancelled"
+   - ✓ Status shows " Cancelled"
    - ✓ All progress bars reset/gray out
 
 ---
 
-**The order experience is now clear and intuitive with visual feedback at every stage!** 🎉
+**The order experience is now clear and intuitive with visual feedback at every stage!** 

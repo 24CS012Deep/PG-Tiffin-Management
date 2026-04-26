@@ -1,4 +1,4 @@
-# ✅ Order Status Flow - Code Changes Summary
+#  Order Status Flow - Code Changes Summary
 
 ## What Was Updated
 
@@ -30,11 +30,11 @@ Simple badge: [Status]
 
 **After:**
 ```
-┌──────────────┐
-│ 📦 Received  │  ← Main status with emoji
++--------------+
+│  Received  │  ← Main status with emoji
 │ Pending      │  ← Sub-label showing state
 │ confirmation │
-└──────────────┘
++--------------+
 ```
 
 #### 3. New Status Progress Bar
@@ -54,7 +54,7 @@ Simple badge: [Status]
 ```
 
 Shows visual progression:
-- 📋 Placed → 📦 Received → ✅ Verified
+- 📋 Placed →  Received →  Verified
 - Colors change as order progresses
 - "Received" stage pulses when waiting for confirmation
 
@@ -84,22 +84,22 @@ Changes:
 {/* When: order.status === "completed" && 
           order.deliveryStatus === "delivered" && 
           !order.otpVerified */}
-┌─ Pending Confirmation ─┐
-│ 📦 Order Received      │
++- Pending Confirmation -+
+│  Order Received      │
 │ Please confirm by      │
 │ entering the OTP       │
-└────────────────────────┘
++------------------------+
 ```
 
 **Added Confirmed Banner:**
 ```javascript
 {/* When: order.status === "completed" && 
           order.otpVerified */}
-┌─ Order Confirmed ──────┐
-│ ✅ Order Confirmed    │
++- Order Confirmed ------+
+│  Order Confirmed    │
 │ Thank you for          │
 │ confirming delivery    │
-└────────────────────────┘
++------------------------+
 ```
 
 ---
@@ -122,38 +122,38 @@ Changes:
 
 **Before:**
 ```
-┌────────────────────────┐
++------------------------+
 │ Order #ABC   Date      │
 │                [Status]│  ← Simple badge only
-├────────────────────────┤
++------------------------+
 │ [Icon] Order Details   │
 │        Qty, Time, Pay  │ [Price] [Cancel/Verify]
 │                        │
 │ Items list             │
 │ Special instructions   │
-└────────────────────────┘
++------------------------+
 ```
 
 **After:**
 ```
-┌────────────────────────┐
++------------------------+
 │ Order #ABC   Date      │
 │                [Status]│
 │              [SubLabel]│  ← Badge with sub-label
-├────────────────────────┤
-│ Progress: ● ──● ──    │  ← Status bar added
-│ 📋      📦      ✅     │
++------------------------+
+│ Progress: ● --● --    │  ← Status bar added
+│ 📋                 │
 │ Placed  Received Verified
 │                        │
 │ [Icon] Order Details   │
 │        Qty, Time, Pay  │ [Price] [Pulsingbtn]
 │                        │
-├─ Pending Banner ──────┤  ← New notification
-│ 📦 Confirm Receipt...│
-├────────────────────────┤
++- Pending Banner ------+  ← New notification
+│  Confirm Receipt...│
++------------------------+
 │ Items list             │
 │ Special instructions   │
-└────────────────────────┘
++------------------------+
 ```
 
 ---
@@ -163,15 +163,15 @@ Changes:
 ### Status Determination
 ```javascript
 if (order.status === "cancelled") {
-  → Show "❌ Cancelled"
+  → Show " Cancelled"
 }
 else if (order.status === "completed") {
   if (order.otpVerified) {
-    → Show "✅ Verified" with "Order confirmed" sub-label
+    → Show " Verified" with "Order confirmed" sub-label
     → Show green progress (all 3 stages complete)
   }
   else if (order.deliveryStatus === "delivered") {
-    → Show "📦 Received" with "Pending confirmation" sub-label
+    → Show " Received" with "Pending confirmation" sub-label
     → Show amber progress (stage 2 active)
     → Show pulsing "Confirm Receipt" button
     → Show pending banner
@@ -192,20 +192,20 @@ else if (order.status === "live") {
 
 ### Stage 1: Order Placed
 - Status: `📋 Live` | Sub: "Order placed"
-- Progress: ● ────────
-- Button: [❌ Cancel]
+- Progress: ● --------
+- Button: [ Cancel]
 - No notification
 
 ### Stage 2: Order Delivered
-- Status: `📦 Received` | Sub: "Pending confirmation"
-- Progress: ● ──● ──── (pulsing)
+- Status: ` Received` | Sub: "Pending confirmation"
+- Progress: ● --● ---- (pulsing)
 - Button: [🔐 Confirm Receipt] (pulsing)
 - Banner: "Order Received - Pending Confirmation"
 
 ### Stage 3: OTP Verified
-- Status: `✅ Verified` | Sub: "Order confirmed"
-- Progress: ● ──● ──● (all complete)
-- Badge: [✅ Verified]
+- Status: ` Verified` | Sub: "Order confirmed"
+- Progress: ● --● --● (all complete)
+- Badge: [ Verified]
 - Banner: "Order Confirmed"
 
 ---
@@ -259,10 +259,10 @@ else if (order.status === "live") {
 
 ## Browser Compatibility
 
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
+-  Chrome 90+
+-  Firefox 88+
+-  Safari 14+
+-  Edge 90+
 - Animation: Uses standard CSS `animate-pulse`
 
 ---
@@ -286,4 +286,4 @@ The customer now sees a **complete, visual journey** of their order:
 2. **Received** - Attention-grabbing (pulsing) with clear call-to-action
 3. **Verified** - Success state with confirmation message
 
-This makes the pending confirmation state impossible to miss! 🎉
+This makes the pending confirmation state impossible to miss! 

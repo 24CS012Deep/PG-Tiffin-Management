@@ -12,7 +12,7 @@ import Billing from "../models/Billing.js";
 /* ================= ADMIN STATS ================= */
 export const getDashboardStats = async (req, res) => {
   try {
-    console.log("📊 Fetching dashboard stats...");
+    console.log(" Fetching dashboard stats...");
     
     const totalUsers = await User.countDocuments();
     const totalStudents = await User.countDocuments({ role: "student" });
@@ -22,11 +22,11 @@ export const getDashboardStats = async (req, res) => {
     const totalOrders = await Order.countDocuments({ status: "live" });
     const totalQueries = await Query.countDocuments({ status: "open" });
 
-    // Calculate monthly revenue
+    // Calculate monthly revenue (all non-cancelled orders)
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const orders = await Order.find({
       createdAt: { $gte: startOfMonth },
-      status: "completed"
+      status: { $ne: "cancelled" }
     });
     const monthlyRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
@@ -43,7 +43,7 @@ export const getDashboardStats = async (req, res) => {
       .sort("-createdAt")
       .limit(5);
 
-    console.log("✅ Dashboard stats fetched successfully");
+    console.log(" Dashboard stats fetched successfully");
 
     res.json({
       totalUsers,
@@ -59,7 +59,7 @@ export const getDashboardStats = async (req, res) => {
       recentQueries
     });
   } catch (error) {
-    console.error("❌ Dashboard stats error:", error);
+    console.error(" Dashboard stats error:", error);
     res.status(500).json({ message: "Failed to fetch admin stats" });
   }
 };
@@ -67,12 +67,12 @@ export const getDashboardStats = async (req, res) => {
 /* ================= GET ALL USERS ================= */
 export const getAllUsers = async (req, res) => {
   try {
-    console.log("👥 Fetching all users...");
+    console.log(" Fetching all users...");
     const users = await User.find().select("-password").sort("-createdAt");
-    console.log(`✅ Found ${users.length} users`);
+    console.log(` Found ${users.length} users`);
     res.json({ success: true, users });
   } catch (error) {
-    console.error("❌ Failed to fetch users:", error);
+    console.error(" Failed to fetch users:", error);
     res.status(500).json({ message: "Failed to fetch users" });
   }
 };
@@ -80,16 +80,16 @@ export const getAllUsers = async (req, res) => {
 /* ================= GET USER BY ID ================= */
 export const getUserById = async (req, res) => {
   try {
-    console.log("👤 Fetching user by ID:", req.params.id);
+    console.log(" Fetching user by ID:", req.params.id);
     const user = await User.findById(req.params.id).select("-password");
     if (!user) {
-      console.log("❌ User not found");
+      console.log(" User not found");
       return res.status(404).json({ message: "User not found" });
     }
-    console.log("✅ User found:", user.email);
+    console.log(" User found:", user.email);
     res.json(user);
   } catch (error) {
-    console.error("❌ Failed to fetch user:", error);
+    console.error(" Failed to fetch user:", error);
     res.status(500).json({ message: "Failed to fetch user" });
   }
 };
@@ -97,14 +97,14 @@ export const getUserById = async (req, res) => {
 /* ================= UPDATE USER ================= */
 export const updateUser = async (req, res) => {
   try {
-    console.log("✏️ Updating user:", req.params.id);
+    console.log(" Updating user:", req.params.id);
     const { name, email, role, isBlocked, roomNumber } = req.body;
     
     // Check if email already exists for another user
     if (email) {
       const existingUser = await User.findOne({ email, _id: { $ne: req.params.id } });
       if (existingUser) {
-        console.log("❌ Email already exists:", email);
+        console.log(" Email already exists:", email);
         return res.status(400).json({ message: "Email already exists" });
       }
     }
@@ -116,14 +116,14 @@ export const updateUser = async (req, res) => {
     ).select("-password");
     
     if (!user) {
-      console.log("❌ User not found");
+      console.log(" User not found");
       return res.status(404).json({ message: "User not found" });
     }
     
-    console.log("✅ User updated successfully:", user.email);
+    console.log(" User updated successfully:", user.email);
     res.json({ success: true, user });
   } catch (error) {
-    console.error("❌ Failed to update user:", error);
+    console.error(" Failed to update user:", error);
     res.status(500).json({ message: "Failed to update user" });
   }
 };
@@ -131,10 +131,10 @@ export const updateUser = async (req, res) => {
 /* ================= DELETE USER ================= */
 export const deleteUser = async (req, res) => {
   try {
-    console.log("🗑️ Deleting user:", req.params.id);
+    console.log(" Deleting user:", req.params.id);
     const user = await User.findById(req.params.id);
     if (!user) {
-      console.log("❌ User not found");
+      console.log(" User not found");
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -144,24 +144,24 @@ export const deleteUser = async (req, res) => {
       if (room) {
         room.students = room.students.filter(id => id.toString() !== user._id.toString());
         await room.save();
-        console.log("✅ Removed student from room");
+        console.log(" Removed student from room");
       }
     }
 
     if (user.role === "customer") {
       const activeOrders = await Order.countDocuments({ customer: user._id, status: "live" });
       if (activeOrders > 0) {
-        console.log("❌ Cannot delete user with active orders");
+        console.log(" Cannot delete user with active orders");
         return res.status(400).json({ message: "Cannot delete user with active orders" });
       }
     }
 
     await User.findByIdAndDelete(req.params.id);
-    console.log("✅ User deleted successfully");
+    console.log(" User deleted successfully");
     
     res.json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-    console.error("❌ Failed to delete user:", error);
+    console.error(" Failed to delete user:", error);
     res.status(500).json({ message: "Failed to delete user" });
   }
 };
@@ -169,7 +169,7 @@ export const deleteUser = async (req, res) => {
 /* ================= CHECK ADMIN ================= */
 export const checkAdmin = async (req, res) => {
   try {
-    console.log("🔍 Checking if admin exists...");
+    console.log(" Checking if admin exists...");
     const admin = await User.findOne({ role: "admin" });
     console.log("Admin exists:", !!admin);
     res.json({
@@ -177,7 +177,7 @@ export const checkAdmin = async (req, res) => {
       adminExists: !!admin
     });
   } catch (error) {
-    console.error("❌ Error checking admin:", error);
+    console.error(" Error checking admin:", error);
     res.status(500).json({ 
       success: false, 
       message: "Error checking admin" 
@@ -189,7 +189,7 @@ export const checkAdmin = async (req, res) => {
 export const registerUser = async (req, res) => {
   try {
     console.log("=".repeat(50));
-    console.log("📝 REGISTRATION ATTEMPT");
+    console.log(" REGISTRATION ATTEMPT");
     console.log("=".repeat(50));
     console.log("Request body:", { 
       name: req.body.name, 
@@ -198,11 +198,11 @@ export const registerUser = async (req, res) => {
       password: "***" 
     });
 
-    let { name, email, password, role } = req.body;
+    let { name, email, password, role, phone, address, roomNumber } = req.body;
 
     // Validate required fields
     if (!name || !email || !password || !role) {
-      console.log("❌ Missing required fields");
+      console.log(" Missing required fields");
       return res.status(400).json({ 
         success: false, 
         message: "All fields are required" 
@@ -242,7 +242,7 @@ export const registerUser = async (req, res) => {
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("❌ Email already exists:", email);
+      console.log(" Email already exists:", email);
       return res.status(400).json({ 
         success: false, 
         message: "Email already exists" 
@@ -256,12 +256,31 @@ export const registerUser = async (req, res) => {
       email,
       password, // Plain password - model will hash automatically
       role,
+      phone,
+      address,
+      roomNumber
     });
 
     // Save user (triggers pre-save hook)
     const savedUser = await user.save();
-    console.log("✅ User saved successfully! ID:", savedUser._id);
+    console.log(" User saved successfully! ID:", savedUser._id);
     console.log("Password was hashed:", savedUser.password !== password);
+
+    // If student and roomNumber provided, sync with Room model
+    if (savedUser.role === "student" && roomNumber) {
+      try {
+        const room = await Room.findOne({ roomNumber });
+        if (room) {
+          if (!room.students.includes(savedUser._id)) {
+            room.students.push(savedUser._id);
+            await room.save();
+            console.log(` Student ${savedUser.name} added to Room ${roomNumber}`);
+          }
+        }
+      } catch (roomErr) {
+        console.error("Failed to sync room assignment during registration:", roomErr);
+      }
+    }
 
     // Send welcome email to new user
     try {
@@ -271,7 +290,7 @@ export const registerUser = async (req, res) => {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
             <div style="background: linear-gradient(135deg, #f97316, #ea580c); padding: 30px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">🏠 Welcome to Siya PG!</h1>
+              <h1 style="color: white; margin: 0; font-size: 28px;"> Welcome to Siya PG!</h1>
               <p style="color: #fed7aa; margin: 8px 0 0 0; font-size: 14px;">Your account has been created</p>
             </div>
             <div style="padding: 25px;">
@@ -298,9 +317,9 @@ export const registerUser = async (req, res) => {
           </div>
         `
       });
-      console.log("✅ Welcome email sent to:", savedUser.email);
+      console.log(" Welcome email sent to:", savedUser.email);
     } catch (emailError) {
-      console.log("⚠️ Welcome email failed:", emailError.message);
+      console.log(" Welcome email failed:", emailError.message);
     }
 
     // Return success
@@ -316,7 +335,7 @@ export const registerUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ REGISTRATION ERROR:", error);
+    console.error(" REGISTRATION ERROR:", error);
     
     // Handle duplicate key error
     if (error.code === 11000) {
@@ -345,7 +364,7 @@ export const loginUser = async (req, res) => {
 
     // Validate required fields
     if (!email || !password) {
-      console.log("❌ Missing email or password");
+      console.log(" Missing email or password");
       return res.status(400).json({ 
         success: false, 
         message: "Email and password are required" 
@@ -361,20 +380,20 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     
     if (!user) {
-      console.log("❌ User not found with email:", email);
+      console.log(" User not found with email:", email);
       return res.status(401).json({ 
         success: false, 
         message: "Invalid email or password" 
       });
     }
 
-    console.log("✅ User found:", user.email);
+    console.log(" User found:", user.email);
     console.log("User role:", user.role);
     console.log("Stored password hash length:", user.password.length);
 
     // Check if user is blocked
     if (user.isBlocked) {
-      console.log("❌ User is blocked");
+      console.log(" User is blocked");
       return res.status(403).json({ 
         success: false, 
         message: "Your account has been blocked. Please contact admin." 
@@ -387,14 +406,14 @@ export const loginUser = async (req, res) => {
     console.log("Password match result:", isMatch);
 
     if (!isMatch) {
-      console.log("❌ Password does not match");
+      console.log(" Password does not match");
       return res.status(401).json({ 
         success: false, 
         message: "Invalid email or password" 
       });
     }
 
-    console.log("✅ Password matched successfully");
+    console.log(" Password matched successfully");
 
     // Generate JWT token
     const token = jwt.sign(
@@ -407,10 +426,10 @@ export const loginUser = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    console.log("✅ JWT token generated");
+    console.log(" JWT token generated");
 
     console.log("=".repeat(50));
-    console.log("✅ LOGIN SUCCESSFUL for:", user.email);
+    console.log(" LOGIN SUCCESSFUL for:", user.email);
     console.log("=".repeat(50));
     
     res.json({
@@ -426,7 +445,7 @@ export const loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ LOGIN ERROR:", error);
+    console.error(" LOGIN ERROR:", error);
     res.status(500).json({ 
       success: false, 
       message: "Login failed. Please try again." 
@@ -437,7 +456,7 @@ export const loginUser = async (req, res) => {
 /* ================= FORGOT PASSWORD ================= */
 export const forgotPassword = async (req, res) => {
   try {
-    console.log("🔑 Forgot password request for:", req.body.email);
+    console.log(" Forgot password request for:", req.body.email);
     
     const { email } = req.body;
     
@@ -451,7 +470,7 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     
     if (!user) {
-      console.log("❌ User not found");
+      console.log(" User not found");
       return res.status(404).json({ 
         success: false, 
         message: "User not found" 
@@ -466,7 +485,7 @@ export const forgotPassword = async (req, res) => {
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
     
-    console.log("✅ Reset token generated for:", user.email);
+    console.log(" Reset token generated for:", user.email);
     
     // Try to send email (don't fail if email fails)
     try {
@@ -489,9 +508,9 @@ export const forgotPassword = async (req, res) => {
           </div>
         `
       });
-      console.log("✅ Reset email sent to:", user.email);
+      console.log(" Reset email sent to:", user.email);
     } catch (emailError) {
-      console.log("⚠️ Email failed but token generated");
+      console.log(" Email failed but token generated");
     }
 
     res.json({ 
@@ -500,7 +519,7 @@ export const forgotPassword = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ Forgot password error:", error);
+    console.error(" Forgot password error:", error);
     res.status(500).json({ 
       success: false, 
       message: "Failed to process request" 
@@ -539,7 +558,7 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      console.log("❌ Invalid or expired token");
+      console.log(" Invalid or expired token");
       return res.status(400).json({ 
         success: false, 
         message: "Invalid or expired token" 
@@ -552,7 +571,7 @@ export const resetPassword = async (req, res) => {
     user.resetPasswordExpire = undefined;
     await user.save();
 
-    console.log("✅ Password reset successful for:", user.email);
+    console.log(" Password reset successful for:", user.email);
     
     // Try to send confirmation email
     try {
@@ -571,7 +590,7 @@ export const resetPassword = async (req, res) => {
         `
       });
     } catch (emailError) {
-      console.log("⚠️ Confirmation email failed");
+      console.log(" Confirmation email failed");
     }
 
     res.json({ 
@@ -580,7 +599,7 @@ export const resetPassword = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ Reset password error:", error);
+    console.error(" Reset password error:", error);
     res.status(500).json({ 
       success: false, 
       message: "Failed to reset password" 

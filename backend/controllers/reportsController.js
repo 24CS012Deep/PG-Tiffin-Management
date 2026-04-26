@@ -13,7 +13,7 @@ export const getReportsData = async (req, res) => {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
-    // ── User Stats ──────────────────────────────────────────
+    // User Stats
     const totalUsers = await User.countDocuments();
     const totalStudents = await User.countDocuments({ role: "student" });
     const totalCustomers = await User.countDocuments({ role: "customer" });
@@ -24,7 +24,7 @@ export const getReportsData = async (req, res) => {
       createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth },
     });
 
-    // ── Order Stats ─────────────────────────────────────────
+    // Order Stats
     const allOrders = await Order.find();
     const totalOrdersCount = allOrders.length;
     const liveOrders = allOrders.filter((o) => o.status === "live").length;
@@ -71,7 +71,7 @@ export const getReportsData = async (req, res) => {
     const dinnerOrders = allOrders.filter((o) => o.deliveryTime === "dinner").length;
     const bothOrders = allOrders.filter((o) => o.deliveryTime === "both").length;
 
-    // ── Room Stats ──────────────────────────────────────────
+    // Room Stats
     const totalRooms = await Room.countDocuments();
     const rooms = await Room.find().populate("students");
     const occupiedBeds = rooms.reduce((sum, r) => sum + (r.students?.length || 0), 0);
@@ -85,19 +85,31 @@ export const getReportsData = async (req, res) => {
     ).length;
     const totalRoomRevenue = rooms.reduce((sum, r) => sum + ((r.students?.length || 0) * (r.rent || 0)), 0);
 
-    // ── Tiffin Plan Stats ───────────────────────────────────
+    // Tiffin Plan Stats
     const totalTiffinPlans = await TiffinPlan.countDocuments();
-    const activePlans = await TiffinPlan.countDocuments({ isActive: true });
-    const plans = await TiffinPlan.find({ isActive: true }).sort("-currentCustomers");
-    const topPlans = plans.slice(0, 5).map((p) => ({
-      name: p.name,
-      price: p.price,
-      customers: p.currentCustomers || 0,
-      maxCustomers: p.maxCustomers || 50,
-      type: p.type,
+    const activePlansCount = await TiffinPlan.countDocuments({ isActive: true });
+    
+    // Fetch active plans and calculate current orders for each to find top plans
+    const activePlans = await TiffinPlan.find({ isActive: true });
+    const plansWithOrders = await Promise.all(activePlans.map(async (plan) => {
+      const orderCount = await Order.countDocuments({ 
+        tiffinPlan: plan._id, 
+        status: { $ne: "cancelled" } 
+      });
+      return {
+        name: plan.planNumber,
+        price: plan.tiffinPrice,
+        customers: orderCount,
+        maxCustomers: plan.maxCapacity,
+        type: plan.mealShifts?.join(", ") || "Lunch"
+      };
     }));
 
-    // ── Billing Stats ───────────────────────────────────────
+    const topPlans = plansWithOrders
+      .sort((a, b) => b.customers - a.customers)
+      .slice(0, 5);
+
+    // Billing Stats
     const allBillings = await Billing.find();
     const totalBilled = allBillings.reduce((sum, b) => sum + (b.amount || 0), 0);
     const totalPaid = allBillings
@@ -113,7 +125,7 @@ export const getReportsData = async (req, res) => {
 
     const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0;
 
-    // ── Query Stats ─────────────────────────────────────────
+    // Query Stats
     const totalQueries = await Query.countDocuments();
     const openQueries = await Query.countDocuments({ status: "open" });
     const closedQueries = await Query.countDocuments({ status: "closed" });
@@ -126,7 +138,7 @@ export const getReportsData = async (req, res) => {
     };
     const resolutionRate = totalQueries > 0 ? Math.round((closedQueries / totalQueries) * 100) : 0;
 
-    // ── Daily Orders (last 7 days) ──────────────────────────
+    // Daily Orders (last 7 days)
     const dailyOrders = [];
     for (let i = 6; i >= 0; i--) {
       const dayStart = new Date(now);
@@ -152,14 +164,14 @@ export const getReportsData = async (req, res) => {
       });
     }
 
-    // ── Recent Orders ───────────────────────────────────────
+    // Recent Orders
     const recentOrders = await Order.find()
       .populate("customer", "name email")
       .populate("tiffinPlan", "name price")
       .sort("-createdAt")
       .limit(8);
 
-    // ── Top Customers by spending ───────────────────────────
+    // Top Customers by spending
     const customerSpending = {};
     for (const order of allOrders.filter((o) => o.status !== "cancelled")) {
       const cId = order.customer?.toString();
@@ -181,7 +193,7 @@ export const getReportsData = async (req, res) => {
       };
     });
 
-    // ── Growth percentages ──────────────────────────────────
+    // Growth percentages
     const revenueGrowth =
       lastMonthRevenue > 0
         ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
@@ -246,7 +258,7 @@ export const getReportsData = async (req, res) => {
       },
       tiffin: {
         totalPlans: totalTiffinPlans,
-        activePlans,
+        activePlans: activePlansCount,
         topPlans,
       },
       billing: {

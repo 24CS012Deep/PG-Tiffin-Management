@@ -8,30 +8,30 @@ import sendEmail from "./sendEmail.js";
 export const notifyCustomersOfNewMenu = async (plan) => {
   // We don't want to block the response, but we catch internal errors
   try {
-    console.log(`⏲️ Scheduling customer notification for plan ${plan.planNumber} in 1 minute...`);
-    
+    console.log(`Scheduling customer notification for plan ${plan.planNumber} in 1 minute...`);
+
     // 1 minute delay as requested
     setTimeout(async () => {
       try {
         // Fetch only customers who are not blocked
         const customers = await User.find({ role: "customer", isBlocked: false });
-        
+
         if (customers.length === 0) {
-          console.log("ℹ️ No customers found to notify.");
+          console.log(" No customers found to notify.");
           return;
         }
 
         const emails = customers.map(c => c.email);
-        
+
         // Format items for email
-        const itemsList = plan.items 
-          ? plan.items.split(/[,\n]/).map(item => `<li style="margin-bottom: 8px;">${item.trim()}</li>`).join("") 
+        const itemsList = plan.items
+          ? plan.items.split(/[,\n]/).map(item => `<li style="margin-bottom: 8px;">${item.trim()}</li>`).join("")
           : "<li>Check website for details</li>";
 
         const html = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 20px; overflow: hidden; color: #333;">
             <div style="background: linear-gradient(to right, #f97316, #fb923c); padding: 40px 20px; text-align: center; color: white;">
-              <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">Today's Menu is Live! 🍱</h1>
+              <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">Today's Menu is Live! </h1>
               <p style="margin-top: 10px; opacity: 0.9; font-size: 16px;">Fresh, healthy, and home-cooked meals are ready for you.</p>
             </div>
             
@@ -68,16 +68,16 @@ export const notifyCustomersOfNewMenu = async (plan) => {
         await sendEmail({
           to: process.env.EMAIL_USER,
           bcc: emails.join(", "),
-          subject: `🍱 Today's Menu: ${plan.planNumber} is now Active!`,
+          subject: ` Today's Menu: ${plan.planNumber} is now Active!`,
           html
         });
 
-        console.log(`✅ Menu notification email sent to ${emails.length} customers.`);
+        console.log(` Menu notification email sent to ${emails.length} customers.`);
       } catch (err) {
-        console.error("❌ Delayed notification failed:", err);
+        console.error(" Delayed notification failed:", err);
       }
     }, 60000); // 1 minute delay
   } catch (error) {
-    console.error("❌ Notification scheduling error:", error);
+    console.error(" Notification scheduling error:", error);
   }
 };

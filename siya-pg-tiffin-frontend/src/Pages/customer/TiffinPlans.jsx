@@ -177,9 +177,17 @@ const TiffinPlans = () => {
               >
                 {/* Header Section */}
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-bold text-slate-800 tracking-tight uppercase group-hover:text-[#FF6B00] transition-colors">
-                    {plan.planNumber}
-                  </h3>
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-lg font-bold text-slate-800 tracking-tight uppercase group-hover:text-[#FF6B00] transition-colors">
+                      {plan.planNumber}
+                    </h3>
+                    <div className={`flex items-center gap-1.5`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${plan.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+                      <span className={`text-[9px] font-black uppercase tracking-widest ${plan.isActive ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {plan.isActive ? 'Active Now' : 'Currently Inactive'}
+                      </span>
+                    </div>
+                  </div>
                   <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
                     view === "active" ? "bg-orange-50 text-[#FF6B00] border-orange-100" : "bg-gray-100 text-gray-500 border-gray-200"
                   }`}>
@@ -261,6 +269,14 @@ const TiffinPlans = () => {
                       o.tiffinPlan?._id === plan._id || o.tiffinPlan === plan._id
                     );
                     
+                    if (!plan.isActive) {
+                      return (
+                        <div className="w-full bg-red-50 text-red-500 py-4 rounded-xl font-bold text-xs uppercase tracking-widest text-center border border-red-100 flex items-center justify-center gap-2">
+                           <FiX size={16} /> Currently Inactive
+                        </div>
+                      );
+                    }
+
                     return (
                       <button 
                         disabled={hasOrdered}

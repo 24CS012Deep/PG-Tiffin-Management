@@ -10,7 +10,7 @@ import {
   getUserOrders, 
   cancelOrder,
   verifyOrderOTP
-} from "../controllers/orderController.js";  // ✅ Add order routes
+} from "../controllers/orderController.js";  //  Add order routes
 
 const router = express.Router();
 

@@ -5,8 +5,8 @@ import { notifyCustomersOfNewMenu } from "../utils/notifyCustomers.js";
 /* ================= CREATE TIFFIN PLAN ================= */
 export const createTiffinPlan = async (req, res) => {
   try {
-    console.log("📝 Creating Tiffin Plan:", req.body);
-    console.log("👤 By User:", req.user);
+    console.log(" Creating Tiffin Plan:", req.body);
+    console.log(" By User:", req.user);
     const { planNumber, tiffinPrice, maxCapacity, date, description, items, isActive, mealShifts } = req.body;
 
     const plan = await TiffinPlan.create({
@@ -21,7 +21,7 @@ export const createTiffinPlan = async (req, res) => {
       createdBy: req.user.id
     });
 
-    console.log("✅ Plan created successfully:", plan._id);
+    console.log(" Plan created successfully:", plan._id);
     
     // Notify customers after 1 minute if plan is active
     if (plan.isActive) {
@@ -30,7 +30,7 @@ export const createTiffinPlan = async (req, res) => {
 
     res.status(201).json(plan);
   } catch (error) {
-    console.error("❌ Create plan error:", error);
+    console.error(" Create plan error:", error);
     res.status(500).json({ message: "Failed to create plan", error: error.message });
   }
 };
@@ -67,7 +67,7 @@ export const getTiffinPlans = async (req, res) => {
     
     res.json(plansWithCounts);
   } catch (error) {
-    console.error("❌ Get plans error:", error);
+    console.error(" Get plans error:", error);
     res.status(500).json({ message: "Failed to fetch plans", error: error.message });
   }
 };

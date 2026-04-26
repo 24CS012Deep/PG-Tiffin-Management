@@ -32,6 +32,8 @@ export default function SignUp() {
     checkAdmin();
   }, []);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const validate = () => {
     let newErrors = {};
     if (!form.name.trim()) newErrors.name = "Name is required";
@@ -51,6 +53,7 @@ export default function SignUp() {
     e.preventDefault();
     if (!validate()) return;
 
+    setIsSubmitting(true);
     try {
       await API.post("/auth/register", {
         name: form.name.trim(),
@@ -63,6 +66,8 @@ export default function SignUp() {
       navigate("/signin");
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -147,8 +152,11 @@ export default function SignUp() {
             {errors.confirmPassword && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.confirmPassword}</p>}
           </div>
 
-          <button className="w-full bg-orange-600 text-white py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition font-medium text-sm sm:text-base">
-            Sign Up
+          <button 
+            disabled={isSubmitting}
+            className={`w-full bg-orange-600 text-white py-2 sm:py-3 rounded-lg hover:bg-orange-700 transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isSubmitting ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
 

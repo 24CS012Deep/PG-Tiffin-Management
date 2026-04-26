@@ -22,7 +22,7 @@ import {
 import { RiSettings4Line } from "react-icons/ri";
 
 const Settings = () => {
-  // ─── Admin Profile State ─────────────────────────────────
+// Admin Profile State
   const [user, setUser] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
@@ -34,7 +34,7 @@ const Settings = () => {
     address: "",
   });
 
-  // ─── Password Change State ───────────────────────────────
+// Password Change State
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -44,7 +44,7 @@ const Settings = () => {
   const [showNewPw, setShowNewPw] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
 
-  // ─── App Preferences State ────────────────────────────────
+// App Preferences State
   const [appPrefs, setAppPrefs] = useState({
     notifications: true,
     emailAlerts: true,
@@ -52,16 +52,16 @@ const Settings = () => {
     timezone: "Asia/Kolkata",
   });
 
-  // ─── Messages ────────────────────────────────────────────
+  // Messages
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  // ─── Active Section Tab ──────────────────────────────────
+  // Active Section Tab
   const [activeSection, setActiveSection] = useState("profile");
 
 
 
-  // ─── Fetch admin profile on mount ────────────────────────
+// Fetch admin profile on mount
   useEffect(() => {
     fetchProfile();
     loadAppPrefs();
@@ -113,7 +113,7 @@ const Settings = () => {
     }
   };
 
-  // ─── Profile Handlers ────────────────────────────────────
+// Profile Handlers
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileForm((prev) => ({ ...prev, [name]: value }));
@@ -169,7 +169,7 @@ const Settings = () => {
     setError("");
   };
 
-  // ─── Password Handlers ───────────────────────────────────
+// Password Handlers
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordForm((prev) => ({ ...prev, [name]: value }));
@@ -216,7 +216,7 @@ const Settings = () => {
     }
   };
 
-  // ─── App Preferences Handlers ────────────────────────────
+// App Preferences Handlers
   const handlePrefChange = (e) => {
     const { name, value, type, checked } = e.target;
     setAppPrefs((prev) => ({
@@ -242,7 +242,7 @@ const Settings = () => {
     setSuccess("Preferences reset to defaults!");
   };
 
-  // ─── Password Strength Indicator ─────────────────────────
+// Password Strength Indicator
   const getPasswordStrength = (pw) => {
     if (!pw) return { level: 0, label: "", color: "" };
     let score = 0;
@@ -262,7 +262,7 @@ const Settings = () => {
 
 
 
-  // ─── Section tabs ────────────────────────────────────────
+// Section tabs
   const sections = [
     { id: "profile", label: "Admin Profile", icon: <FiUser /> },
     { id: "password", label: "Change Password", icon: <FiLock /> },
@@ -295,7 +295,7 @@ const Settings = () => {
         </p>
       </div>
 
-      {/* Success / Error Alerts */}
+      {/* USERS TAB */}
       {success && (
         <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-5 py-3 rounded-r-xl mb-5 flex items-center gap-3 animate-fadeIn">
           <FiCheckCircle className="text-lg flex-shrink-0" />
@@ -331,7 +331,7 @@ const Settings = () => {
         </div>
 
         <div className="p-6 md:p-8">
-          {/* ═══════════ ADMIN PROFILE SECTION ═══════════ */}
+          {/* ADMIN PROFILE SECTION */}
           {activeSection === "profile" && (
             <div>
               <div className="flex items-center justify-between mb-6">
@@ -354,7 +354,7 @@ const Settings = () => {
               </div>
 
               {!editMode ? (
-                /* ─── View Mode ──────────────────────────── */
+                /* helpers */
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {[
                     {
@@ -426,7 +426,7 @@ const Settings = () => {
                   </div>
                 </div>
               ) : (
-                /* ─── Edit Mode ──────────────────────────── */
+                /* --- Edit Mode ---------------------------- */
                 <form onSubmit={handleProfileSave} className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
@@ -516,7 +516,7 @@ const Settings = () => {
             </div>
           )}
 
-          {/* ═══════════ CHANGE PASSWORD SECTION ═══════════ */}
+{/* CHANGE PASSWORD SECTION */}
           {activeSection === "password" && (
             <div>
               <div className="mb-6">
@@ -685,7 +685,7 @@ const Settings = () => {
             </div>
           )}
 
-          {/* ═══════════ APP PREFERENCES SECTION ═══════════ */}
+{/* APP PREFERENCES SECTION */}
           {activeSection === "preferences" && (
             <div>
               <div className="mb-6">
