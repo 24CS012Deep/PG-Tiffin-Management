@@ -20,6 +20,8 @@ import {
   FiFilter,
 } from "react-icons/fi";
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const GenerateBills = () => {
   const [preset, setPreset] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -82,7 +84,7 @@ const GenerateBills = () => {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/admin/billings/export-csv?${queryString}`,
+        `${API_URL}/admin/billings/export-csv?${queryString}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
